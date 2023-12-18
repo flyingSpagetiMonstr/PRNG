@@ -14,12 +14,6 @@
 
 #define MILLION (1000000)
 #define STREAM_LEN (MILLION*100)
-// #define STREAM_LEN (MILLION*100*10)
-// #define STREAM_LEN (100000000*10)
-// #define STREAM_LEN (100000000*3)
-// #define STREAM_LEN (100000000/0xff)
-// 0x5f0ff9f; 0x11767580;
-// #define STREAM_LEN (100000)
 
 enum _init_method {
     zero_state, // = 0
@@ -37,18 +31,21 @@ enum _init_method {
 // #define GRNG_UPDATE(x) (x) = GRNG_ITER(x)
 // ==================================
 #define OP_N (4) // 2^{2}
+// #define TO_TWO (0b1)
 #define TO_FOUR (0b11)
 #define TO_EIGHT (0b111)
-uint8_t and(uint8_t x, uint8_t a) {return x ^ a;}
-uint8_t or(uint8_t x, uint8_t a) {return x | a;}
-// uint8_t add(uint8_t x, uint8_t a) {return x + a;}
-// uint8_t sub(uint8_t x, uint8_t a) {return x - a;}
-uint8_t mul(uint8_t x, uint8_t a) {return x * a;}
+state_t *auxiliary = NULL;
+uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
+uint8_t add(uint8_t x, uint8_t a) {return x + a;}
 uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
-// uint8_t rshitf(uint8_t x, uint8_t a) {return LSHIFT(x, a&COMPRESS);}
-// uint8_t map(uint8_t x, uint8_t a) {return ... ;}
+uint8_t unarys(uint8_t x, uint8_t a) {return a? ~x: auxiliary->f[x];}
 typedef uint8_t (*operation)(uint8_t, uint8_t);
-operation phi[OP_N] = {and, or, mul, rshitf};
+operation phi[OP_N] = {add, xor, rshitf, unarys};
+// uint8_t lshitf(uint8_t x, uint8_t a) {return LSHIFT(x, a&TO_EIGHT);}
+// uint8_t sub(uint8_t x, uint8_t a) {return x - a;}
+// uint8_t and(uint8_t x, uint8_t a) {return x & a;} // and is bad
+// uint8_t or(uint8_t x, uint8_t a) {return x | a;} // or is bad
+// uint8_t mul(uint8_t x, uint8_t a) {return x * a;} // mult is bad
 // ==================================
 
 void update(state_t* state);
@@ -57,20 +54,14 @@ void peak(state_t *state, int stream_len);
 
 int main()
 {
-//     uint8_t x[] = {0x7F, 0x6F}; 
-//     char buff[9] = {0};
-//     for (int i = 0; i < 2; i++)
-//     {
-//         printf("R: %8s ", itoa(RSHIFT(x[i],1), buff, 2));
-//         printf("L: %8s ", itoa(LSHIFT(x[i],1), buff, 2));
-//     }
-// exit(0);
-
     uint8_t bit = 0;
     uint8_t j = 0;
 
     state_t _s = {0};
     state_t *state = &_s;
+
+    auxiliary = state;
+
     init_state(state, load_state);
     // init_state(state, zero_state);
     // init_state(state, rand_state);
@@ -78,7 +69,7 @@ int main()
     FILE *out = fopen(OUTPUT, "wb");
     int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
 
-    // ajusted_stream_len /= 8;
+    ajusted_stream_len /= 8;
     
     puts("Generating...");
     #define i (state->i)
@@ -113,13 +104,9 @@ void update(state_t* state)
     #define f (state->f)
     #define index (state->i)
 
-    // uint8_t* mix = (uint8_t*)state;
-    // ----------------------------------
+    register uint8_t new = 0;
 
-    // register uint8_t new = 0;
-    register uint8_t new = f[index];
-
-    // new = phi[new&(OP_N-1)](new, state->x); // 100 - 1 = 11
+    new = f[index] + index;
     new = phi[new&TO_FOUR](new, f[state->x]);
     new = phi[new&TO_FOUR](new, f[new]);
 
@@ -127,29 +114,12 @@ void update(state_t* state)
     {
         new += f[cnt]; // gather
         new += f[new]; // mix
-        // new += cnt;
-        // new <- new+f[cnt] + f[new+f[cnt]]
-
-        // new += f[(uint8_t)(f[cnt]+new)];
-
-        // new += f[f[cnt]]>>1;
     }
-    // ----------------------------------
 
     new += state->x;
     state->x = GRNG_ITER(state->x);
 
-    // ###########################
-    uint8_t i = new;
-    uint8_t j = i;
-    while (new == f[index])
-    {
-        new += i;
-        i += 0; // i += state->bitstream[index];
-        i += (i == j);
-        j = i;
-    }
-    // ###########################
+    new += (new == f[index]);
 
     f[index] = new;
 
