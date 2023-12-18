@@ -32,10 +32,23 @@ enum _init_method {
 #define P 251
 #define G 248 // maximum primitive root
 #define G_MULT(x) (((x)*G)%P)
-#define GRNG_ITER(x) G_MULT(x)
-#define BOUND(x) ((x)%(P-1)+1)
-
-#define GRNG_UPDATE(x) (x) = GRNG_ITER(x)
+#define GRNG_ITER(x) ((uint8_t)G_MULT(x))
+// #define BOUND(x) ((x)%(P-1)+1)
+// #define GRNG_UPDATE(x) (x) = GRNG_ITER(x)
+// ==================================
+#define OP_N (4) // 2^{2}
+#define TO_FOUR (0b11)
+#define TO_EIGHT (0b111)
+uint8_t and(uint8_t x, uint8_t a) {return x ^ a;}
+uint8_t or(uint8_t x, uint8_t a) {return x | a;}
+// uint8_t add(uint8_t x, uint8_t a) {return x + a;}
+// uint8_t sub(uint8_t x, uint8_t a) {return x - a;}
+uint8_t mul(uint8_t x, uint8_t a) {return x * a;}
+uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
+// uint8_t rshitf(uint8_t x, uint8_t a) {return LSHIFT(x, a&COMPRESS);}
+// uint8_t map(uint8_t x, uint8_t a) {return ... ;}
+typedef uint8_t (*operation)(uint8_t, uint8_t);
+operation phi[OP_N] = {and, or, mul, rshitf};
 // ==================================
 
 void update(state_t* state);
@@ -44,6 +57,15 @@ void peak(state_t *state, int stream_len);
 
 int main()
 {
+//     uint8_t x[] = {0x7F, 0x6F}; 
+//     char buff[9] = {0};
+//     for (int i = 0; i < 2; i++)
+//     {
+//         printf("R: %8s ", itoa(RSHIFT(x[i],1), buff, 2));
+//         printf("L: %8s ", itoa(LSHIFT(x[i],1), buff, 2));
+//     }
+// exit(0);
+
     uint8_t bit = 0;
     uint8_t j = 0;
 
@@ -56,7 +78,7 @@ int main()
     FILE *out = fopen(OUTPUT, "wb");
     int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
 
-    ajusted_stream_len /= 8; 
+    // ajusted_stream_len /= 8;
     
     puts("Generating...");
     #define i (state->i)
@@ -65,11 +87,12 @@ int main()
         j = state->f[i];
         bit = IS_ODD(j);
 
+        // ##########################################
         // if (bit_store(bit, state->bitstream) == 1)
         //     fwrite(state->bitstream, 1, LEN, out);
 
         update(state); // update f[i]
-        fwrite(&(state->f[i]), 1, 1, out);
+        fwrite(&j, 1, 1, out);
         i = j;
 
         if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
@@ -89,29 +112,36 @@ void update(state_t* state)
 {
     #define f (state->f)
     #define index (state->i)
+
     // uint8_t* mix = (uint8_t*)state;
-
-    
-    uint8_t const bit = IS_ODD(f[index]) << 7;
-    uint8_t const h_mask = 0x7F;
-
-    uint8_t new = 0;
     // ----------------------------------
-    for (int cnt = 0; cnt < LEN; cnt++)
+
+    // register uint8_t new = 0;
+    register uint8_t new = f[index];
+
+    // new = phi[new&(OP_N-1)](new, state->x); // 100 - 1 = 11
+    new = phi[new&TO_FOUR](new, f[state->x]);
+    new = phi[new&TO_FOUR](new, f[new]);
+
+    for (register int cnt = 0; cnt < LEN; cnt++)
     {
-        // switch (f[f[cnt]]%3)
-        new += f[f[cnt]]>>1;
+        new += f[cnt]; // gather
+        new += f[new]; // mix
+        // new += cnt;
+        // new <- new+f[cnt] + f[new+f[cnt]]
+
+        // new += f[(uint8_t)(f[cnt]+new)];
+
+        // new += f[f[cnt]]>>1;
     }
-    new &= h_mask;
-    new |= bit;
     // ----------------------------------
 
     new += state->x;
-    GRNG_UPDATE(state->x);
+    state->x = GRNG_ITER(state->x);
 
+    // ###########################
     uint8_t i = new;
     uint8_t j = i;
-    // ###########################
     while (new == f[index])
     {
         new += i;
@@ -119,6 +149,8 @@ void update(state_t* state)
         i += (i == j);
         j = i;
     }
+    // ###########################
+
     f[index] = new;
 
     #undef index

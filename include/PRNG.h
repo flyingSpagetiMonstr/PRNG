@@ -15,6 +15,11 @@
 #define IS_ODD(x) ((x)&1)
 #define CEIL(x, n) ((x) + ((n) - (x)%(n)))
 
+// cyclic shift for uint8_t
+#define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
+#define LSHIFT(x, n) ((uint8_t)(((x)<<(n))^((x)>>(8-(n))))) 
+
+
 // state = {f[], bitstream[], x, i}
 typedef struct _state_t
 {
