@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "bitstore.h"
+// #include "bitstore.h"
 #include "PRNG.h"
 #include "dump.h"
 
@@ -54,7 +54,6 @@ void peak(state_t *state, int stream_len);
 
 int main()
 {
-    uint8_t bit = 0;
     uint8_t j = 0;
 
     state_t _s = {0};
@@ -76,12 +75,6 @@ int main()
     for (uint64_t cnt = 0; cnt < ajusted_stream_len; cnt++)
     {
         j = state->f[i];
-        bit = IS_ODD(j);
-
-        // ##########################################
-        // if (bit_store(bit, state->bitstream) == 1)
-        //     fwrite(state->bitstream, 1, LEN, out);
-
         update(state); // update f[i]
         fwrite(&j, 1, 1, out);
         i = j;
@@ -93,7 +86,6 @@ int main()
     puts("FIN");
 
     printf("Dumping state into %s...\n", DUMP_FILE);
-    // pack(state, f, bitstream, &i, &x);
     dump(state, DUMP_FILE, sizeof(*state));
 
     fclose(out);
@@ -165,7 +157,6 @@ void init_state(state_t *state, enum _init_method m)
 void peak(state_t *state, int stream_len)
 {
     printf("f[0]: 0x%x\n", state->f[0]);
-    printf("bitstream[0]: 0x%x\n", state->bitstream[0]);
     printf("x: %d\n", state->x);
     printf("i: %d\n", state->i);
     printf("stream_len: %d\n", stream_len);
