@@ -1,3 +1,5 @@
+# note: this document is for the initial version
+
 # Pre
 - 有时将PRNG看作一个**状态机**会很有用
   - 给定状态机初态$state$，则PRNG的工作过程可以被描述为：
