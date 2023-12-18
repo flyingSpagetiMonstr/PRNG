@@ -36,20 +36,6 @@ enum _init_method {
 // #define BOUND(x) ((x)%(P-1)+1)
 // #define GRNG_UPDATE(x) (x) = GRNG_ITER(x)
 // ==================================
-#define OP_N (4) // 2^{2}
-#define TO_FOUR (0b11)
-#define TO_EIGHT (0b111)
-uint8_t and(uint8_t x, uint8_t a) {return x ^ a;}
-uint8_t or(uint8_t x, uint8_t a) {return x | a;}
-// uint8_t add(uint8_t x, uint8_t a) {return x + a;}
-// uint8_t sub(uint8_t x, uint8_t a) {return x - a;}
-uint8_t mul(uint8_t x, uint8_t a) {return x * a;}
-uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
-// uint8_t rshitf(uint8_t x, uint8_t a) {return LSHIFT(x, a&COMPRESS);}
-// uint8_t map(uint8_t x, uint8_t a) {return ... ;}
-typedef uint8_t (*operation)(uint8_t, uint8_t);
-operation phi[OP_N] = {and, or, mul, rshitf};
-// ==================================
 
 void update(state_t* state);
 void init_state(state_t *state, enum _init_method m);
@@ -57,15 +43,6 @@ void peak(state_t *state, int stream_len);
 
 int main()
 {
-//     uint8_t x[] = {0x7F, 0x6F}; 
-//     char buff[9] = {0};
-//     for (int i = 0; i < 2; i++)
-//     {
-//         printf("R: %8s ", itoa(RSHIFT(x[i],1), buff, 2));
-//         printf("L: %8s ", itoa(LSHIFT(x[i],1), buff, 2));
-//     }
-// exit(0);
-
     uint8_t bit = 0;
     uint8_t j = 0;
 
@@ -78,7 +55,6 @@ int main()
     FILE *out = fopen(OUTPUT, "wb");
     int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
 
-    // ajusted_stream_len /= 8;
     
     puts("Generating...");
     #define i (state->i)
@@ -87,9 +63,8 @@ int main()
         j = state->f[i];
         bit = IS_ODD(j);
 
-        // ##########################################
-        // if (bit_store(bit, state->bitstream) == 1)
-        //     fwrite(state->bitstream, 1, LEN, out);
+        if (bit_store(bit, state->bitstream) == 1)
+            fwrite(state->bitstream, 1, LEN, out);
 
         update(state); // update f[i]
         fwrite(&j, 1, 1, out);
@@ -102,7 +77,6 @@ int main()
     puts("FIN");
 
     printf("Dumping state into %s...\n", DUMP_FILE);
-    // pack(state, f, bitstream, &i, &x);
     dump(state, DUMP_FILE, sizeof(*state));
 
     fclose(out);
@@ -113,20 +87,11 @@ void update(state_t* state)
     #define f (state->f)
     #define index (state->i)
 
-    // uint8_t* mix = (uint8_t*)state;
-    // ----------------------------------
-
-    // register uint8_t new = 0;
-    register uint8_t new = f[index];
-
-    // new = phi[new&(OP_N-1)](new, state->x); // 100 - 1 = 11
-    new = phi[new&TO_FOUR](new, f[state->x]);
-    new = phi[new&TO_FOUR](new, f[new]);
+    register uint8_t new = 0;
 
     for (register int cnt = 0; cnt < LEN; cnt++)
     {
-        new += f[cnt]; // gather
-        new += f[new]; // mix
+        new += f[f[cnt]] >> 1;
         // new += cnt;
         // new <- new+f[cnt] + f[new+f[cnt]]
 
