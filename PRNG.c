@@ -48,7 +48,6 @@ int main()
 
     FILE *out = fopen(OUTPUT, "wb");
     int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
-
     
     puts("Generating...");
     #define i (state->i)
@@ -56,12 +55,11 @@ int main()
     {
         j = state->f[i];
         bit = IS_ODD(j);
-
+        
         if (bit_store(bit, state->bitstream) == 1)
             fwrite(state->bitstream, 1, LEN, out);
 
         update(state); // update f[i]
-        fwrite(&j, 1, 1, out);
         i = j;
 
         if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
