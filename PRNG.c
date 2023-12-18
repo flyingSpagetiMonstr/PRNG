@@ -14,12 +14,6 @@
 
 #define MILLION (1000000)
 #define STREAM_LEN (MILLION*100)
-// #define STREAM_LEN (MILLION*100*10)
-// #define STREAM_LEN (100000000*10)
-// #define STREAM_LEN (100000000*3)
-// #define STREAM_LEN (100000000/0xff)
-// 0x5f0ff9f; 0x11767580;
-// #define STREAM_LEN (100000)
 
 enum _init_method {
     zero_state, // = 0
@@ -88,36 +82,25 @@ void update(state_t* state)
     #define index (state->i)
 
     register uint8_t new = 0;
-
     for (register int cnt = 0; cnt < LEN; cnt++)
     {
         new += f[f[cnt]] >> 1;
-        // new += cnt;
-        // new <- new+f[cnt] + f[new+f[cnt]]
-
-        // new += f[(uint8_t)(f[cnt]+new)];
-
-        // new += f[f[cnt]]>>1;
     }
-    // ----------------------------------
 
     new += state->x;
     state->x = GRNG_ITER(state->x);
 
-    // ###########################
     uint8_t i = new;
     uint8_t j = i;
     while (new == f[index])
     {
-        new += i;
-        i += 0; // i += state->bitstream[index];
+        i += state->bitstream[index];
         i += (i == j);
         j = i;
+        new += i;
     }
-    // ###########################
 
     f[index] = new;
-
     #undef index
     #undef f
 }
