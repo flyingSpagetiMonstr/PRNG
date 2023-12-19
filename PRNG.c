@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-// #include "bitstore.h"
+#include "bitstore.h"
 #include "PRNG.h"
 #include "dump.h"
 
@@ -13,7 +13,7 @@
 #define INFO "dumps/stream_len.dat"
 
 #define MILLION (1000000)
-#define STREAM_LEN (MILLION*100)
+#define STREAM_LEN (MILLION*1000)
 
 enum _init_method {
     zero_state, // = 0
@@ -23,10 +23,16 @@ enum _init_method {
 
 // ==================================
 // GRNG: Generator Random Number Generator 
-#define P 251
-#define G 248 // maximum primitive root
+// P: 1567, G_most = 1565
+#define P 1567
+#define G 1565 // maximum primitive root
+// #define P 251
+// #define G 248 // maximum primitive root
 #define G_MULT(x) (((x)*G)%P)
-#define GRNG_ITER(x) ((uint8_t)G_MULT(x))
+#define GRNG_ITER(x) (G_MULT(x))
+#define COMPRESS(x) ((uint8_t)(x))
+
+// #define USE(x) ((uint8_t)(x)) 
 // #define BOUND(x) ((x)%(P-1)+1)
 // #define GRNG_UPDATE(x) (x) = GRNG_ITER(x)
 // ==================================
@@ -57,6 +63,7 @@ void peak(state_t *state, int stream_len);
 int main()
 {
     uint8_t j = 0;
+    uint8_t bit = 0;
 
     state_t _s = {0};
     state_t *state = &_s;
@@ -77,8 +84,13 @@ int main()
     for (uint64_t cnt = 0; cnt < ajusted_stream_len; cnt++)
     {
         j = state->f[i];
-        update(state); // update f[i]
+
+        // bit = IS_ODD(j);
+        // if (bit_store(bit, state->bitstream) == 1)
+        //     fwrite(state->bitstream, 1, LEN, out);
+
         fwrite(&j, 1, 1, out);
+        update(state); // update f[i]
         i = j;
 
         if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
@@ -116,15 +128,16 @@ void update(state_t* state)
     uint8_t new = 0;
     uint8_t old = f[index];
     uint8_t register a = index;
-    uint8_t register b = f[a];
-    uint8_t register c = f[state->x];
+    uint8_t register b = f[COMPRESS(a + state->x)];
+    uint8_t register c = f[COMPRESS(state->x)];
 
-    for (int cnt = 0; cnt < 3; cnt++)
+    for (int cnt = 0; cnt < 22; cnt++)
     {
         a = PHI(b)(a, c);
-        b = PHI(c)(b, a);
-        c = PHI(a)(c, b);
+        b = PHI(c)(b, f[a]);
+        c = PHI(f[a])(c, b);
         f[b] += c;
+        f[c] += b;
     }
     new = a;
     // ------------------------------------------
