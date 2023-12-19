@@ -1,7 +1,10 @@
 *.exe
+*.asm
 Q.md
 sts-2.1.2
 others/
 objs/
 dumps/
 .vscode
+
+measure.ps1

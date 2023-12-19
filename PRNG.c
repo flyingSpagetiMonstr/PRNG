@@ -62,21 +62,26 @@ int main()
     FILE *out = fopen(OUTPUT, "wb");
     int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
     ajusted_stream_len /= 8;
-    
+
     puts("Generating...");
+    clock_t start_time = clock();
     #define i (state->i)
     for (uint64_t cnt = 0; cnt < ajusted_stream_len; cnt++)
     {
         j = state->f[i];
-        fwrite(&j, 1, 1, out);
         update(state); // mainly updates f[i]
         i = j;
 
+        fwrite(&j, 1, 1, out);
         if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
             printf(".");
     }
     #undef i
+    clock_t end_time = clock();
     puts("FIN");
+
+    double elapsed_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+    printf("Elapsed time: %.6f seconds\n", elapsed_time);
 
     printf("Dumping state into %s...\n", DUMP_FILE);
     dump(state, DUMP_FILE, sizeof(*state));
