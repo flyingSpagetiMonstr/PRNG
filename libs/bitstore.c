@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include "bitstore.h"
-#include "PRNG.h"
 
 uint8_t bit_cache = 0;
 uint8_t bit_pos = 7; // 0 ~ 7
