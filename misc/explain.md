@@ -1,72 +1,153 @@
-# note: this document is for the initial version
+<!-- [See xxx](#...) -->
 
 # Pre
 - 有时将PRNG看作一个**状态机**会很有用
-  - 给定状态机初态$state$，则PRNG的工作过程可以被描述为：
+  - 给定状态机初态`state`，则PRNG的工作过程可以被描述为：
     ```python
     while(1):
         bit = g(state)
         yield bit
 
-        state = f(state)
+        state = update(state)
     ```
-  - `g`为生成/提取函数，每次从`state`中提出信息作为输出比特
-  - `f`为更新函数，每次改变state
+  - `update`每次改变/更新`state`，`g`从`state`中提出信息（`bit`）作为输出
+  - 关键在于更新函数的设计/结构
 
-- 在
+- 函数/映射选取
+  - 伪随机数生成算法很关键的一点是复杂度，若不在乎复杂度，大可计算$e^{x}$，$x$作为种子，$e^{x}$的二进制表示作为输出流，也会有不错的结果(参考测试集中`.\data\data.e`、`.\data\data.pi`等)
+  - 因此设计中使用计算机原生的运算、操作作为映射：
+    1. 各种算术运算，结构简单的数据到数据映射
+       - `add`
+       - `xor (bitwise)`
+       - `cyclic shift`
+       - `not (bitwise)`
+    2. 其它不能保持Uniformity的算术运算(不采用)[(Details)](#...)
+       - `multiply`
+       - `and (bitwise)`
+       - `or (bitwise)`
+    3. 数据寻址/数组，数据映射到数据
+       - `x = f[x]`
+    4. 指令寻址/跳转，数据映射到操作
+       - `operation = operations[x]`
 
-# How it works
+<!-- 避免状态收敛 -->
+# Procedure
+- 状态统一存在一个结构体里<a id="code-00-back"></a>[(See code)](#code-00)
 
-<!-- ## 流程 -->
+- `state`、`g`的选取<a id="code-01-back"></a>[(See code)](#code-01)
+  - 状态主体选择为一个数组`uint8_t f[256]`，这样状态本身除了可以看作数据，同时可以看作一个$[0, 256]->[0, 256]$的映射。
+  - 取`uint8_t i`，`f[i]`作为每次迭代的输出，输出后令`i = f[i]`
+  - 易知，若`f`不变，则`i`一旦回到之前的某个值，那么接下来输出的序列将完全重复，故每次`f[i]`使用后即丢弃（更新）
 
-- 定义一个数组`uint8_t f[256]`，则`f`可看做 0~256 -> 0~256 的一个映射（同时，`f`可以看作该PRNG的种子）
+- `update`的设计<a id="code-02-back"></a>[(See code)](#code-02)
+  - `state->x`：`x`为常量偏移，在每次update时也会自更新一次，设计上是采用最大原根每次作乘法遍历`P=1567`的简化剩余系(1~1566)
+    - 为什么`P=1567`？
+      - 除了直接用`x`作常量偏移，也有取`f[x]`使用，故需要有较长的周期，避免因周期过短在`f[]`未充分更新时即开始循环，会导致`f[x]`出现周期性
+      - 每次迭代，`f[]`的哪个元素会被更新是随机的，理想情况下，`x`周期应长于`f[]`全部更新所需轮数
+      - 参考[Coupon collector's problem](https://en.wikipedia.org/wiki/Coupon_collector%27s_problem)，即：每次从1~n随机取1个值，平均需要取多少次才能遍历1~n？问题的解由以下公式给出：<br>
+        $E[n] = n \cdot \left(1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}\right)$
+      - $E[256] = 1567.832310$，取最近的素数即得1567
+    - 为什么取最大原根？
+      - 每次乘的数更大可以在模`P`后有更好的Uniformity
 
-- <a id="code-01-back"></a>每次迭代将`i`经`f`映射，取`f[i]`作为输出，并令`i = f[i]`[(See code)](#code-01)
+  - 核心变换
+    - phi为函数指针数组，存有`{add, xor, rshitf, unarys}`四个双目运算
+      - note: `rshift`为循环移位
+      - unarys中有两个单目运算，用a
+    
+    - 这里一系列操作使用了之前提到的所有运算
+    - 以`b = PHI(c)(b, f[a]);`为例
 
-- 伪随机性完全依赖于`f`，重点在于`f`的维护以及避免状态收敛
-  - 易知，在`f`不变的情况下一旦`i`回到之前的某个值，那么接下来生成的序列将完全重复，故每次`f[i]`使用后即丢弃（更新）[(See code)](#code-02)
+  - pass
 
-  - 更新方法：
-
-  - 为什么这样更新？
-    1. 
 <!-- ================================================== -->
 # Codes
+
+## Code-00
+
+```c
+// state = {f[], x, i}
+typedef struct _state_t
+{
+    uint8_t f[LEN];
+    uint8_t x;
+    uint8_t i;
+} state_t;
+...
+// in main():
+state_t _s = {0};
+state_t *state = &_s;
+```
+[Go back](#code-00-back)
+
 ## Code-01
 ```c
 #define IS_ODD(x) ((x)&1)
 #define LEN 256
 ...
-
-i = 0;
+// in main():
+uint8_t i = 0;
 for (uint64_t cnt = 0; cnt < stream_len; cnt++)
 {
     j = f[i];
     // yield j
+    update(f, i);
     i = j;
 }
 ```
 [Go back](#code-01-back)
 
+
 ## Code-02
-```c
-...
-// yield j
-update(f, i);
-i = j;
-...
-```
+- defines: 
+  ```c
+  // cyclic rshift for uint8_t
+  #define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
+
+  #define OP_N (4) // 2^{2}
+  #define TO_FOUR (0b11)
+  #define TO_EIGHT (0b111)
+
+  state_t *auxiliary = NULL; // auxiliary = state;
+  uint8_t add(uint8_t x, uint8_t a) {return x + a;}
+  uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
+  uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
+  uint8_t unarys(uint8_t x, uint8_t a) {return a? ~x: auxiliary->f[x];}
+
+  typedef uint8_t (*operation)(uint8_t, uint8_t);
+  operation phi[OP_N] = {add, xor, rshitf, unarys};
+  #define PHI(x) (phi[(x)&TO_FOUR])
+  ```
+
+- update():
+  ```c
+  uint8_t old = f[index];
+
+  uint8_t new = 0;
+  uint8_t register a = index;
+  uint8_t register b = f[COMPRESS(a + state->x)];
+  uint8_t register c = f[COMPRESS(state->x)];
+  for (int cnt = 0; cnt < 22; cnt++)
+  {
+      a = PHI(b)(a, c);
+      b = PHI(c)(b, f[a]);
+      c = PHI(f[a])(c, b);
+      f[b] += c;
+      f[c] += b;
+  }
+  new = a;
+
+  new += state->x;
+  state->x = GRNG_ITER(state->x);
+
+  new += (new == old);
+
+  f[index] = new;
+  
+  return;
+  ```
+[Go back](#code-02-back)
 
 
-<!-- ================================================== -->
-```c
-// state = {f[], bitstream[], x, i}
-typedef struct _state_t
-{
-    uint8_t f[LEN];
-    // uint8_t bitstream[LEN];
-    uint8_t x;
-    uint8_t i;
-    // uint64_t stream_len;
-} state_t;
-```
+
+

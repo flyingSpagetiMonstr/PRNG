@@ -31,16 +31,19 @@ enum _init_method {
 #define COMPRESS(x) ((uint8_t)(x))
 // ==================================
 #define OP_N (4) // 2^{2}
+#define TO_TWO (0b1)
 #define TO_FOUR (0b11)
 #define TO_EIGHT (0b111)
-#define PHI(x) (phi[(x)&TO_FOUR])
+
 state_t *auxiliary = NULL;
-uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
 uint8_t add(uint8_t x, uint8_t a) {return x + a;}
+uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
 uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
-uint8_t unarys(uint8_t x, uint8_t a) {return a? ~x: auxiliary->f[x];}
+uint8_t unarys(uint8_t x, uint8_t a) {return (a&TO_TWO)? ~x: auxiliary->f[x];}
+
 typedef uint8_t (*operation)(uint8_t, uint8_t);
 operation phi[OP_N] = {add, xor, rshitf, unarys};
+#define PHI(x) (phi[(x)&TO_FOUR])
 // ==================================
 
 void update(state_t* state);
