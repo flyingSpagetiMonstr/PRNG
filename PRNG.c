@@ -119,6 +119,7 @@ void update(state_t* state)
 
 void init_state(state_t *state, enum _init_method m)
 {
+    int stream_len = 0;
     state->x = G;
     switch (m)
     {
@@ -135,17 +136,17 @@ void init_state(state_t *state, enum _init_method m)
         break;
 
     case load_state:
-        // if nothing to load, behavior would be same as zero_state
+        // if nothing to load or load error (error in file operation),
+        // behavior would be same as zero_state
         printf("Loading state from %s...\n", DUMP_FILE);
         load(state, DUMP_FILE, sizeof(*state));
+        load(&stream_len, INFO, sizeof(stream_len));
         break;
 
     default:
         puts("No such option.");
         break;
     }
-    int stream_len = 0;
-    load(&stream_len, INFO, sizeof(stream_len));
     stream_len += STREAM_LEN;
     // peak(state, stream_len); exit(0);
     dump(&stream_len, INFO, sizeof(stream_len));
