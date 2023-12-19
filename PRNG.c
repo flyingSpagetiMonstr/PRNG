@@ -34,6 +34,8 @@ enum _init_method {
 // #define TO_TWO (0b1)
 #define TO_FOUR (0b11)
 #define TO_EIGHT (0b111)
+#define PHI(x) (phi[(x)&TO_FOUR])
+// #define XCHG(a, b) a = a ^ b; b = a ^ b; a = a ^ b
 state_t *auxiliary = NULL;
 uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
 uint8_t add(uint8_t x, uint8_t a) {return x + a;}
@@ -96,22 +98,41 @@ void update(state_t* state)
     #define f (state->f)
     #define index (state->i)
 
-    register uint8_t new = 0;
+    // ------------------------------------------
+    // register uint8_t new = 0;
+    // new = f[index] + index;
+    // new = phi[new&TO_FOUR](new, f[state->x]);
+    // new = phi[new&TO_FOUR](new, f[new]);
+    
+    // a = phi[b](a, c);
+    // a = phi[a&TO_FOUR](a, f[a]);
 
-    new = f[index] + index;
-    new = phi[new&TO_FOUR](new, f[state->x]);
-    new = phi[new&TO_FOUR](new, f[new]);
+    // for (register int cnt = 0; cnt < LEN; cnt++)
+    // {
+    //     new += f[cnt]; // gather
+    //     new += f[new]; // mix
+    // }
+    // ------------------------------------------
+    uint8_t new = 0;
+    uint8_t old = f[index];
+    uint8_t register a = index;
+    uint8_t register b = f[a];
+    uint8_t register c = f[state->x];
 
-    for (register int cnt = 0; cnt < LEN; cnt++)
+    for (int cnt = 0; cnt < 3; cnt++)
     {
-        new += f[cnt]; // gather
-        new += f[new]; // mix
+        a = PHI(b)(a, c);
+        b = PHI(c)(b, a);
+        c = PHI(a)(c, b);
+        f[b] += c;
     }
+    new = a;
+    // ------------------------------------------
 
     new += state->x;
     state->x = GRNG_ITER(state->x);
 
-    new += (new == f[index]);
+    new += (new == old);
 
     f[index] = new;
 
