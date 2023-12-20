@@ -13,7 +13,7 @@
 #define INFO "dumps/stream_len.dat"
 
 #define MILLION (1000000)
-#define STREAM_LEN (MILLION*100)
+#define STREAM_LEN (MILLION*1000)
 
 enum _init_method {
     zero_state, // = 0

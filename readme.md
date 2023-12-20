@@ -17,3 +17,5 @@ compiling with:
   Thread model: posix
   gcc version 9.2.0 (GCC)
 ```
+
+for how it works, see /misc/explain.md
