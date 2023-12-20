@@ -21,7 +21,7 @@
        - `xor (bitwise)`
        - `cyclic shift`
        - `not (bitwise)`
-    2. 其它不能保持Uniformity的算术运算(不采用为主干运算，仅作辅助)<a id="f-02-back"></a>[[See more]](#f-02)
+    2. 其它不能保持Uniformity的算术运算(不采用为主干运算，仅作辅助)<a id="f-02-back"></a>[[See more @f-02]](#f-02)
        - `multiply`
        - `and (bitwise)`
        - `or (bitwise)`
@@ -31,7 +31,7 @@
        - `operation = operations[x]`
 
 ### [Coupon collector's problem](https://en.wikipedia.org/wiki/Coupon_collector%27s_problem)
-   - 每次从1~n随机取1个值，平均需要取多少次才能遍历1~n？
+   - 每次从1 ~ n随机取1个值，平均需要取多少次才能遍历1 ~ n？
    - 问题的解由以下公式给出：<br>
    $E[n] = n \cdot \left(1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}\right)$
 
@@ -48,7 +48,7 @@
   - 核心
     - `phi`为函数指针数组，存有`{add, xor, rshitf, unarys}`四个双目运算
       - `rshift`为循环移位
-      - unarys中有两个单目运算，用第二个操作数a来选择对x进行哪个单目运算
+      - `unarys`中有两个单目运算，用第二个操作数a来选择对x进行哪个单目运算
     - 三次`PHI`
       - 以`b = PHI(c)(b, f[a])`为例，用`c`选择实施的运算，`b`作主操作数，`f[c]`作副操作数，运算结果赋给`b`
       - 后面的步骤将`a`、`b`、`c`轮换位置，以将其值作不同用处
@@ -58,7 +58,7 @@
     - 总体上，这里一系列操作混杂了之前提到的[所有方法](#函数映射选取)
   - 善后
     - 因为运算结果对`f[]`状态的依赖性比较大，故最后`+=`一个常量偏移[`state->x`](#state-x)
-    - 最后，若`f[]`新值和原值相等，则`+=1`<a id="f-01-back"></a>[[See more]](#f-01)
+    - 最后，若`f[]`新值和原值相等，则`+=1`<a id="f-01-back"></a>[[See more @f-01]](#f-01)
 
 ### `state->x`<a id="code-03-back"></a>[[See code]](#code-03)
   - `x`为常量偏移，在每次update时也会自更新一次，设计上是采用最大原根每次作乘法遍历`P=1567`的简化剩余系(1~1566)
