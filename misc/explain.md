@@ -21,13 +21,13 @@
        - `xor (bitwise)`
        - `cyclic shift`
        - `not (bitwise)`
-    2. 其它不能保持Uniformity的算术运算(不采用)[(Details)](#...)
+    2. 其它不能保持Uniformity的算术运算(不采用为主干运算，仅作辅助)[(Details)](#...)
        - `multiply`
        - `and (bitwise)`
        - `or (bitwise)`
-    3. 数据寻址/数组，数据映射到数据
+    3. 数据映射到数据，将数据作为数据的地址：数组
        - `x = f[x]`
-    4. 指令寻址/跳转，数据映射到操作
+    4. 数据映射到操作，将数据作为指令的地址：跳转表
        - `operation = operations[x]`
 
 <!-- 避免状态收敛 -->
@@ -40,6 +40,16 @@
   - 易知，若`f`不变，则`i`一旦回到之前的某个值，那么接下来输出的序列将完全重复，故每次`f[i]`使用后即丢弃（更新）
 
 - `update`的设计<a id="code-02-back"></a>[(See code)](#code-02)
+
+  - `PHI`
+    - `phi`为函数指针数组，存有`{add, xor, rshitf, unarys}`四个双目运算
+    - note: 
+      - `rshift`为循环移位
+      - unarys中有两个单目运算，用第二个操作数a来选择对x进行哪个单目运算
+    - 以`b = PHI(c)(b, f[a])`为例，用`c`选择实施的运算，`b`作主操作数，`f[c]`作副操作数，运算结果赋给`b`
+    - 后面的步骤可以看到`a`、`b`、`c`轮换位置，再将其值作不同用法
+    <!-- - 这里一系列操作使用了之前提到的所有运算 -->
+
   - `state->x`：`x`为常量偏移，在每次update时也会自更新一次，设计上是采用最大原根每次作乘法遍历`P=1567`的简化剩余系(1~1566)
     - 为什么`P=1567`？
       - 除了直接用`x`作常量偏移，也有取`f[x]`使用，故需要有较长的周期，避免因周期过短在`f[]`未充分更新时即开始循环，会导致`f[x]`出现周期性
@@ -49,15 +59,6 @@
       - $E[256] = 1567.832310$，取最近的素数即得1567
     - 为什么取最大原根？
       - 每次乘的数更大可以在模`P`后有更好的Uniformity
-
-  - 核心变换
-    - phi为函数指针数组，存有`{add, xor, rshitf, unarys}`四个双目运算
-      - note: `rshift`为循环移位
-      - unarys中有两个单目运算，用a
-    
-    - 这里一系列操作使用了之前提到的所有运算
-    - 以`b = PHI(c)(b, f[a]);`为例
-
   - pass
 
 <!-- ================================================== -->
@@ -99,7 +100,7 @@ for (uint64_t cnt = 0; cnt < stream_len; cnt++)
 
 
 ## Code-02
-- defines: 
+- defines for `PHI`: 
   ```c
   // cyclic rshift for uint8_t
   #define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
@@ -119,7 +120,7 @@ for (uint64_t cnt = 0; cnt < stream_len; cnt++)
   #define PHI(x) (phi[(x)&TO_FOUR])
   ```
 
-- update():
+- update:
   ```c
   uint8_t old = f[index];
 
