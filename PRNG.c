@@ -108,8 +108,6 @@ void update(state_t* state)
         a = PHI(b)(a, c);
         b = PHI(c)(b, f[a]);
         c = PHI(f[a])(c, b);
-        // f[b] += c;
-        // f[c] += b;
     }
     
     uint8_t B = 0, C = 0;
