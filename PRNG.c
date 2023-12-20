@@ -13,7 +13,7 @@
 #define INFO "dumps/stream_len.dat"
 
 #define MILLION (1000000)
-#define STREAM_LEN (MILLION*10)
+#define STREAM_LEN (MILLION*100)
 
 enum _init_method {
     zero_state, // = 0
@@ -108,9 +108,16 @@ void update(state_t* state)
         a = PHI(b)(a, c);
         b = PHI(c)(b, f[a]);
         c = PHI(f[a])(c, b);
-        f[b] += c;
-        f[c] += b;
+        // f[b] += c;
+        // f[c] += b;
     }
+    
+    uint8_t B = 0, C = 0;
+    B = PHI(a)(f[c], b|1);
+    C = PHI(a)(f[b], c|1);
+    f[b] = B;
+    f[c] = C;
+
     new = a;
 
     new += state->x;
