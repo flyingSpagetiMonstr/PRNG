@@ -36,7 +36,7 @@
    $E[n] = n \cdot \left(1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}\right)$
 
 # Procedure
-### Note
+### note
 - 代码实现中，状态统一存在一个结构体里<a id="code-00-back"></a>[[See code]](#code-00)
 
 ### `state`、`g`的选取<a id="code-01-back"></a>[[See code]](#code-01)
@@ -193,7 +193,7 @@ state->x = GRNG_ITER(state->x);
 
 # Footnotes
 # f-02
-- Note
+- note
   - 这里设计的程序，输出是按整数输出（一次输出一个`uint8_t`），主要操作也都是在`uint8_t`上进行
 - 以双目运算为例，运算对象是`uint8_t`的情况下，很多双目运算在两个操作数完全随机时，输出是非随机的
   - 比如，最好理解的是移位运算，丢弃移出位，总是会增加0的个数
