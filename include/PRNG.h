@@ -24,7 +24,7 @@
 typedef struct _state_t
 {
     uint8_t f[LEN];
-    uint8_t bitstream[LEN];
+    // uint8_t bitstream[LEN];
     // uint8_t x;
     uint16_t x;
     uint8_t i;

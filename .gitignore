@@ -1,5 +1,7 @@
 *.exe
 *.asm
+*.pdf
+
 Q.md
 sts-2.1.2
 others/
