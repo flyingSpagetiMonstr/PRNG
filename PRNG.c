@@ -3,18 +3,26 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "bitstore.h"
 #include "PRNG.h"
-#include "dump.h"
+#include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 
-#define OUTPUT "sts-2.1.2/data/stream.dat"
+#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 // #define OUTPUT "sts-2.1.2/data/runtest.dat"
-#define DUMP_FILE "dumps/state.dat"
-#define INFO "dumps/stream_len.dat"
+#define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
+#define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
-#define MILLION (1000000)
-#define STREAM_LEN (MILLION*100)
+#define MILLION (1000000) 
+#define STREAM_LEN (MILLION*100) // required stream length (by bit)
 
+// ==================================
+// definitions for iteration of state->x
+#define P 1567 // prime
+#define G 1565 // maximum primitive root
+#define G_MULT(x) (((x)*G)%P)
+#define GRNG_ITER(x) (G_MULT(x))
+#define COMPRESS(x) ((uint8_t)(x))
+
+// ==================================
 enum _init_method {
     zero_state, // = 0
     rand_state,
@@ -22,20 +30,19 @@ enum _init_method {
 };
 
 // ==================================
-// GRNG: Generator Random Number Generator 
-// P: 1567, G_most = 1565
-#define P 1567
-#define G 1565 // maximum primitive root
-#define G_MULT(x) (((x)*G)%P)
-#define GRNG_ITER(x) (G_MULT(x))
-#define COMPRESS(x) ((uint8_t)(x))
-// ==================================
+// definitions for funtion "PHI"
 #define OP_N (4) // 2^{2}
 #define TO_TWO (0b1)
 #define TO_FOUR (0b11)
 #define TO_EIGHT (0b111)
 
-state_t *auxiliary = NULL;
+// cyclic rshift for uint8_t
+#define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
+
+state_t *auxiliary = NULL; 
+// "auxiliary" will be initialized by "state_t *state", 
+// working as a global variable to make state accessible from anywhere
+
 uint8_t add(uint8_t x, uint8_t a) {return x + a;}
 uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
 uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
@@ -59,12 +66,10 @@ int main()
     auxiliary = state;
 
     init_state(state, load_state);
-    // init_state(state, zero_state);
-    // init_state(state, rand_state);
 
     FILE *out = fopen(OUTPUT, "wb");
-    int ajusted_stream_len = CEIL(STREAM_LEN, LEN*8); 
-    ajusted_stream_len /= 8;
+
+    int ajusted_stream_len = STREAM_LEN/8; // generating one byte per round
 
     puts("Generating...");
     clock_t start_time = clock();
@@ -77,7 +82,7 @@ int main()
 
         fwrite(&j, 1, 1, out);
         if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
-            printf(".");
+            printf("."); // show progress
     }
     #undef i
     clock_t end_time = clock();
@@ -100,6 +105,8 @@ void update(state_t* state)
     uint8_t old = f[index];
 
     uint8_t new = 0;
+
+    // initialize a, b, c
     uint8_t register a = index;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
@@ -109,7 +116,6 @@ void update(state_t* state)
         b = PHI(c)(b, f[a]);
         c = PHI(f[a])(c, b);
     }
-    
     uint8_t B = 0, C = 0;
     B = PHI(a)(f[c], b|1);
     C = PHI(a)(f[b], c|1);
@@ -132,14 +138,19 @@ void update(state_t* state)
 
 void init_state(state_t *state, enum _init_method m)
 {
-    int stream_len = 0;
-    state->x = G;
+    int stream_len = 0; 
+    // stream_len records the accumulated bit length generated since
+    // last reset of state (i.e. loading from zero_state or rand_state) 
+
+    state->x = G; // initalize x
     switch (m)
     {
     case zero_state:
+        // do nothing, since state is already set to all zero (except for state->x)
         break;
 
     case rand_state:
+        // use c rand() to initialize state
         puts("Seeding state...");
         srand(time(0));
         for (int i = 0; i < LEN; i++)
@@ -149,20 +160,23 @@ void init_state(state_t *state, enum _init_method m)
         break;
 
     case load_state:
-        // if nothing to load or load error (error in file operation),
-        // behavior would be same as zero_state
+        // load state from previous dumped state
         printf("Loading state from %s...\n", DUMP_FILE);
         load(state, DUMP_FILE, sizeof(*state));
         load(&stream_len, INFO, sizeof(stream_len));
+        // if nothing to load or load error (error in file operation),
+        // behavior would be same as zero_state
         break;
 
     default:
         puts("No such option.");
         break;
     }
-    stream_len += STREAM_LEN;
+    stream_len += STREAM_LEN; // update stream_len
+
+
     // peak(state, stream_len); exit(0);
-    dump(&stream_len, INFO, sizeof(stream_len));
+    dump(&stream_len, INFO, sizeof(stream_len)); // store stream_len into file
 }
 
 void peak(state_t *state, int stream_len)
