@@ -11,6 +11,11 @@ void dump(void* x, char* filename, int len)
         fwrite(x, len, 1, dst);
         fclose(dst);
    }
+   else
+   {
+        printf("Failed to dump into %s, maybe the route doesn't exist.\n", filename);
+   }
+   
 }
 
 void load(void* x, char* filename, int len)
@@ -20,5 +25,9 @@ void load(void* x, char* filename, int len)
     {
         fread(x, len, 1, src);
         fclose(src);
+    }
+    else
+    {
+        printf("Failed to load from %s, maybe the route doesn't exist.\n", filename);
     }
 }
