@@ -1,5 +1,7 @@
 # PRNG
 
+---
+
 A Pseudorandom Number Generator
 
 Not using any existing cryptographic algorithms or PRNGs
@@ -14,7 +16,7 @@ For the test report, see `report\1000-test-finalAnalysisReport.txt`
 
 For details on how/why it works, see `explain.md` (in simplified Chinese)
 
-Currently there is no rigid mathematical proof to guarantee it's randomness, but it is not done by magic or revelation
+Currently there is no rigid mathematical proof to guarantee its randomness, but it is not done by magic or revelation
 
 ---
 
