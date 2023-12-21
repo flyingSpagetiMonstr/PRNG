@@ -4,16 +4,23 @@ A Pseudorandom Number Generator
 
 Not using any existing cryptographic algorithms or PRNGs
 
+---
+
 Randomness has passed tests of [NIST SP 800-22](https://csrc.nist.gov/pubs/sp/800/22/r1/upd1/final) (*A Statistical Test Suite for Random and Pseudorandom Number Generators for Cryptographic Applications*)
 
-For details on how/why it works, see explain.md (in simplified Chinese)
+For the test report, see `report\1000-test-finalAnalysisReport.txt`
 
-There is no rigid mathematical proof to guarantee the randomness, but it is not done by magic or revelation
+---
 
-currently two versions: 
+For details on how/why it works, see `explain.md` (in simplified Chinese)
+
+Currently there is no rigid mathematical proof to guarantee it's randomness, but it is not done by magic or revelation
+
+---
+
+There are two versions: 
 - on branch "master"
   - current version, generating byte by byte
-  - test results are stored in /reports
 - on branch "bit"
   - legacy version, generating bit by bit, and the uniformity is not so good
 
