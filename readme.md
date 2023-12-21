@@ -1,10 +1,12 @@
 # PRNG
 
-Not using any existing cryptographic algorithms or PRNGs.
+A Pseudorandom Number Generator in C
 
-Randomness is tested under the test suit of NIST SP 800-22.
+Not using any existing cryptographic algorithms or PRNGs
 
-For how it works, see explain.md.
+Randomness is tested under the test suit of NIST SP 800-22
+
+For how it works, see explain.md
 
 currently two versions: 
 - on branch "master"
