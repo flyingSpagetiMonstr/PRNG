@@ -4,7 +4,7 @@
     ```python
     while(1):
         out = g(state)
-        yield bit
+        yield out
 
         state = update(state)
     ```
