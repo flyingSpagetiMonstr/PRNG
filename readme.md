@@ -6,7 +6,7 @@ Not using any existing cryptographic algorithms or PRNGs
 
 Randomness has passed tests of [NIST SP 800-22](https://csrc.nist.gov/pubs/sp/800/22/r1/upd1/final) (*A Statistical Test Suite for Random and Pseudorandom Number Generators for Cryptographic Applications*)
 
-For details on how/why it works, see explain.md
+For details on how/why it works, see explain.md (in simplified Chinese)
 
 There is no rigid mathematical proof to guarantee the randomness, but it is not done by magic or revelation
 
