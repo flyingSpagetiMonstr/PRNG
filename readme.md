@@ -1,5 +1,7 @@
 # PRNG
 
+Not using any existing cryptographic algorithms or PRNGs.
+
 Evaluated under test suit of NIST SP 800-22.
 
 For how it works, see explain.md
