@@ -7,7 +7,6 @@
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
-// #define OUTPUT "sts-2.1.2/data/runtest.dat"
 #define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
