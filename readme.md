@@ -1,11 +1,15 @@
 # PRNG
 
-NIST SP 800-22
+Evaluated under NIST SP 800-22 test suit.
+
+For how it works, see /misc/explain.md
 
 currently two versions: 
-- generating by bit: bit
-- generating by byte: master
-
+- on branch "master"
+  - current version, generating by byte
+  - test results of NIST test suit are stored in /reports
+- on branch "bit"
+  - legacy version, generating by bit, and the uniformity is not so good
 
 compiling with:  
 ```
@@ -17,5 +21,3 @@ compiling with:
   Thread model: posix
   gcc version 9.2.0 (GCC)
 ```
-
-for how it works, see /misc/explain.md

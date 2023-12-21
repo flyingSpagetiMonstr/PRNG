@@ -1,5 +1,5 @@
 CC = gcc -O1
-OBJS = objs/PRNG.o objs/dump.o objs/bitstore.o
+OBJS = objs/PRNG.o objs/dump.o
 FLAGS = -I include/
 TARGET = PRNG.exe
 
@@ -29,14 +29,11 @@ asm: PRNG.asm
 PRNG.exe: $(OBJS) 
 	$(CC) -o $@ $(OBJS)
 
-objs/PRNG.o: PRNG.c include/PRNG.h include/dump.h include/bitstore.h
+objs/PRNG.o: PRNG.c include/PRNG.h include/dump.h
 	$(CC) $(FLAGS) -c -o $@ $<
 
 objs/dump.o: libs/dump.c include/dump.h include/PRNG.h 
 	$(CC) $(FLAGS) -c -o $@ $<
 
-objs/bitstore.o: libs/bitstore.c include/bitstore.h include/PRNG.h 
-	$(CC) $(FLAGS) -c -o $@ $<
-
-PRNG.asm: PRNG.c include/PRNG.h include/dump.h include/bitstore.h
+PRNG.asm: PRNG.c include/PRNG.h include/dump.h 
 	$(CC) $(FLAGS) -S -o $@ $<
