@@ -146,7 +146,8 @@ void init_state(state_t *state, enum _init_method m)
     switch (m)
     {
     case zero_state:
-        // do nothing, since state is already set to all zero (except for state->x)
+        // initialize 'state' to all zero (except for state->x)
+        // doing nothing, since it's already initialized as all zero when defined 
         break;
 
     case rand_state:
