@@ -2,16 +2,16 @@
 
 Not using any existing cryptographic algorithms or PRNGs.
 
-Evaluated under test suit of NIST SP 800-22.
+Randomness is tested under the test suit of NIST SP 800-22.
 
-For how it works, see explain.md
+For how it works, see explain.md.
 
 currently two versions: 
 - on branch "master"
-  - current version, generating by byte
-  - test results of NIST test suit are stored in /reports
+  - current version, generating byte by byte
+  - test results are stored in /reports
 - on branch "bit"
-  - legacy version, generating by bit, and the uniformity is not so good
+  - legacy version, generating bit by bit, and the uniformity is not so good
 
 compiling with:  
 ```
