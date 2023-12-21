@@ -2,7 +2,7 @@
 
 Evaluated under NIST SP 800-22 test suit.
 
-For how it works, see /misc/explain.md
+For how it works, see explain.md
 
 currently two versions: 
 - on branch "master"
