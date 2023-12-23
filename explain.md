@@ -79,7 +79,7 @@
   - PRNG的每次更新所使用的参数中，必然包含之前步骤所得出的“新”值
   - `a`直接取`i`，`b`和`c`则使用了[`state->x`](#state-xsee-code)和`f[]`
 
-### 其它
+### `PHI`中`b`、`c`的去处
   1. 更新过程中使用了`a`、`b`、`c`三个变量，而最终只取`a`，在打乱效果较可观的情况下，这样有点浪费计算量，故最后增加了两句根据`b`、`c`更改`f[]`的操作
      ```c
      uint8_t B = 0, C = 0;
@@ -88,15 +88,28 @@
      f[b] = B;
      f[c] = C;
      ```
-     以及，由于该程序每次的输出均为`f[]`的某个元素，会暴露一部分状态，一些情况下会导致无法通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)（即攻击者观察足够长的输出序列后，即可一定程度上预测剩下的输出），这里增加对`f[i]`以外元素的修改，可以部分解决此问题。
-  2. 这个PRNG的种子是什么？
-     - 可以取`state`中的任意位作种子，其余位按`default_state`即可
-     - 建议优先取`i`作种子，其次是`x`，最后`f[]`
+     其它作用见[能否通过Next-bit test](#能否通过next-bit-test)
 
-# Unknowns
-1. 能否通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)
-2. 是否是CSPRNG（Cryptographically secure pseudorandom number generator）
 
+# 其它
+### 是否是CSPRNG
+CSPRNG: Cryptographically secure pseudorandom number generator
+
+CSPRNG要求
+1. 通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)
+2. 由当前的部分/全部状态不能倒推之前的状态/输出
+
+#### 能否通过Next-bit test
+
+由于该程序每次的输出均为`f[]`的某个元素，会暴露内部状态，导致输出更容易预测，故更新过程中增加了[对`f[i]`以外元素的修改](#phi中bc的去处)，可以部分解决此问题。
+
+目前尚未找出平凡的预测输出的攻击手段，不清楚能否通过Next-bit test。
+
+#### 状态反推
+由于`f[]`不是满射，故由当前状态无法倒推之前状态，更无法获得之前的输出。
+
+### 这个PRNG的种子是什么？
+可以取`state`中的任意位作种子，其余位按`default_state`即可。建议优先取`i`作种子，其次是`x`，最后`f[]`
 <!-- ================================================== -->
 # Codes
 
