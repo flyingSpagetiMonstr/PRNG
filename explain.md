@@ -92,7 +92,7 @@
 
 
 # 其它
-### 是否是CSPRNG
+### 一、是否是CSPRNG
 CSPRNG: Cryptographically secure pseudorandom number generator
 
 CSPRNG要求
@@ -108,7 +108,7 @@ CSPRNG要求
 #### 状态反推
 由于`f[]`不是满射，故由当前状态无法倒推之前状态，更无法获得之前的输出。
 
-### 这个PRNG的种子是什么？
+### 二、这个PRNG的种子是什么？
 可以取`state`中的任意位作种子，其余位按`default_state`即可。建议优先取`i`作种子，其次是`x`，最后`f[]`
 <!-- ================================================== -->
 # Codes
