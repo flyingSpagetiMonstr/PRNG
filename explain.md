@@ -88,6 +88,12 @@
      f[b] = B;
      f[c] = C;
      ```
+     以及，由于该程序每次的输出均为`f[]`的某个元素，会暴露一部分状态，一些情况下会导致无法通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)（即攻击者观察足够长的输出序列后，即可一定程度上预测剩下的输出），这里增加对`f[i]`以外元素的修改，可以部分解决此问题。
+
+# Unknowns
+1. 能否通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)
+2. 是否是CSPRNG（Cryptographically secure pseudorandom number generator）
+
 <!-- ================================================== -->
 # Codes
 

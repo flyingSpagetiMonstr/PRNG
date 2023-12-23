@@ -6,6 +6,7 @@
 // 2^N = LEN
 #define N 8
 #define LEN 256
+#define END ((LEN)-1)
 
 // state = {f[], x, i}
 typedef struct _state_t

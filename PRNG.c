@@ -20,10 +20,11 @@
 #define G_MULT(x) (((x)*G)%P)
 #define GRNG_ITER(x) (G_MULT(x))
 #define COMPRESS(x) ((uint8_t)(x))
+#define BOUND(x) ((x)%(P-1)+1) // convert x to 1 ~ P-1
 
 // ==================================
 enum _init_method {
-    zero_state, // = 0
+    default_state, // = 0
     rand_state,
     load_state
 };
@@ -64,7 +65,7 @@ int main()
     state_t *state = &_s;
     auxiliary = state;
 
-    init_state(state, load_state);
+    init_state(state, default_state);
 
     FILE *out = fopen(OUTPUT, "wb");
 
@@ -139,14 +140,20 @@ void init_state(state_t *state, enum _init_method m)
 {
     int stream_len = 0; 
     // stream_len records the accumulated bit length generated since
-    // last reset of state (i.e. loading from zero_state or rand_state) 
+    // last reset of state (i.e. initializing from default_state or rand_state) 
 
-    state->x = G; // initalize x
+    // default_state:
+    state->x = G;
+    state->i = END/4;
+    for (int i = 0; i < LEN; i++)
+    {
+        state->f[i] = (uint8_t)(END-1-i);
+    }
+
     switch (m)
     {
-    case zero_state:
-        // initialize 'state' to all zero (except for state->x)
-        // doing nothing, since it's already initialized as all zero when defined 
+    case default_state:
+        // doing nothing, since already initialized above 
         break;
 
     case rand_state:
@@ -157,6 +164,9 @@ void init_state(state_t *state, enum _init_method m)
         {
             state->f[i] = (uint8_t)rand();
         }
+        state->i = (uint8_t)rand();
+        state->x = (uint16_t)rand();
+        state->x = BOUND(state->x);
         break;
 
     case load_state:
@@ -165,15 +175,14 @@ void init_state(state_t *state, enum _init_method m)
         load(state, DUMP_FILE, sizeof(*state));
         load(&stream_len, INFO, sizeof(stream_len));
         // if nothing to load or load error (error in file operation),
-        // behavior would be same as zero_state
+        // behavior would be same as default_state
         break;
 
     default:
-        puts("No such option.");
+        puts("No such option, initializing by default_state");
         break;
     }
     stream_len += STREAM_LEN; // update stream_len
-
 
     // peak(state, stream_len); exit(0);
     dump(&stream_len, INFO, sizeof(stream_len)); // store stream_len into file

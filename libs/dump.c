@@ -15,7 +15,6 @@ void dump(void* x, char* filename, int len)
    {
         printf("Failed to dump into %s, maybe the route doesn't exist.\n", filename);
    }
-   
 }
 
 void load(void* x, char* filename, int len)
