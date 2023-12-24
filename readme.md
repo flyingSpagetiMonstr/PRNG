@@ -6,6 +6,8 @@ A Pseudorandom Number Generator
 
 Not using any existing cryptographic algorithms or PRNGs
 
+Update: it has become a CSPRNG (Cryptographically secure pseudorandom number generator) now, if I didn't get it wrong. 
+
 ---
 
 Randomness has passed tests of [NIST SP 800-22](https://csrc.nist.gov/pubs/sp/800/22/r1/upd1/final) (*A Statistical Test Suite for Random and Pseudorandom Number Generators for Cryptographic Applications*)
