@@ -11,7 +11,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*100) // required stream length (by bit)
+#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
 
 // ==================================
 // definitions for iteration of state->x
@@ -65,7 +65,7 @@ int main()
     state_t *state = &_s;
     auxiliary = state;
 
-    init_state(state, default_state);
+    init_state(state, load_state);
 
     FILE *out = fopen(OUTPUT, "wb");
 
@@ -89,7 +89,7 @@ int main()
     puts("FIN");
 
     double elapsed_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-    printf("Elapsed time: %.6f seconds\n", elapsed_time);
+    printf("Time cost: %.6f seconds\n", elapsed_time);
 
     printf("Dumping state into %s...\n", DUMP_FILE);
     dump(state, DUMP_FILE, sizeof(*state));
@@ -116,11 +116,14 @@ void update(state_t* state)
         b = PHI(c)(b, f[a]);
         c = PHI(f[a])(c, b);
     }
-    uint8_t B = 0, C = 0;
-    B = PHI(a)(f[c], b|1);
-    C = PHI(a)(f[b], c|1);
-    f[b] = B;
-    f[c] = C;
+
+    uint8_t register m = (b + c)|1; // mask out unary:f
+    uint8_t register s = m;
+    for (int i = 0; i < LEN; i++)
+    {
+        f[i] = PHI(s)(f[i], m);
+        s++;
+    }
 
     new = a;
 
