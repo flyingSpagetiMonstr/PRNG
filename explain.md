@@ -4,9 +4,8 @@
     ```python
     while(1):
         out = g(state)
-        yield out
-
         state = update(state)
+        yield out
     ```
   - `update`每次改变/更新`state`，`g`从`state`中提出信息（`out`）作为输出
   - 关键在于更新函数的设计/结构
@@ -43,31 +42,32 @@
 
 # Procedure
 ### note
-- 代码实现中，状态统一存在一个结构体里<a id="code-00-back"></a>[[See code]](#code-00)
+- 建议参考代码阅读
 
-### `state`、`g`的选取<a id="code-01-back"></a>[[See code]](#code-01)
-  - 状态主体选择为一个数组`uint8_t f[256]`，这样状态本身除了可以看作数据，同时可以看作一个 $[0, 256]->[0, 256]$ 的映射。
-  - 取`uint8_t i`，`f[i]`作为每次迭代的输出，输出后令`i = f[i]`
-  - 易知，若`f[]`不变，则`i`一旦回到之前的某个值，那么接下来输出的序列将完全重复，故每次`f[i]`使用后即丢弃（更新）
+### `state`、`g`的选取
+  - 状态主体选择为一个数组`uint8_t f[256]`，这样状态本身除了可以看作数据，同时可以看作一个 $[0, 256]->[0, 256]$ 的映射。此外，状态还包含`uint8_t i`、[`uint16_t x`]
+  - `f[i]`作为每次迭代的输出
+  - 每次输出后更新`f[i]`、`i`、`x`
 
-### `update`的设计<a id="code-02-back"></a>[[See code]](#code-02)
+### `update`的设计
   - 核心
     - `phi`为函数指针数组，存有`{add, xor, rshitf, unarys}`四个双目运算
       - `rshift`为循环移位
-      - `unarys`中有两个单目运算，用第二个操作数a来选择对x进行哪个单目运算
+      - `unarys`中有两个单目运算，用第二个操作数来选择对第一个操作数进行哪个单目运算
     - 三次`PHI`
       - 以`b = PHI(c)(b, f[a])`为例，用`c`选择实施的运算，`b`作主操作数，`f[c]`作副操作数，运算结果赋给`b`
-      - 后面的步骤将`a`、`b`、`c`轮换位置，以将其值作不同用处
+      - 每次循环中将`a`、`b`、`c`轮换位置参与变换
       - 同时`a`除了自更新时，均以`f[a]`形式参与变换
     - 循环22次后，取`a`值作为新`f[i]`
-      - 为什么循环22次？时间原因这里尚未考虑得十分仔细，暂取 $E[8] = 21.742857 \approx 22$，实测效果很好
+      - 为什么循环22次？$E[8] = 21.742857 \approx 22$。这样，对每一个数，每种运算都被施加过一次（`unarys`中有两种运算，它们被选中的概率最低，为1/8，故按 $E[8]$ 计算）
     - 总体上，这里一系列操作交叉使用了之前提到的[所有方法](#函数映射选取)
   - 善后
-    - 因为运算结果对`f[]`状态的依赖性比较大，故最后`+=`一个常量偏移[`state->x`](#state-x)
+    - 参见[`state->x`](#state-x)
     - 最后，若`f[]`新值和原值相等，则`+=1`<a id="f-01-back"></a>[[See more @f-01]](#f-01)
 
-### `state->x`<a id="code-03-back"></a>[[See code]](#code-03)
-  - `x`为常量偏移，在每次update时也会自更新一次，设计上是采用最大原根每次作乘法遍历`P=1567`的简化剩余系(1~1566)
+### `state->x`
+  - `x`为常量偏移，在每次update时也会自更新一次，主要作用是防止输出过分依赖`f[]`，`x`可以让`f[]`更快地从有序状态（比如全零）恢复到伪随机状态。
+  - 设计上采用最大原根每次作乘法遍历`P=1567`的简化剩余系(1~1566)
   - 为什么`P=1567`？
     - `x`除了直接作常量偏移，也以`c = f[COMPRESS(state->x)]`等用法来进行“三次`PHI`”前[`a`、`b`、`c`的初始化](#abc的初始化)，故需要有较长的周期，避免因周期过短在`f[]`未充分更新时即开始循环，会导致`f[x]`出现周期性
     - 理想情况下，`x`的周期应长于`f[]`全部更新一遍所需的轮数，而每次迭代，`f[]`的哪个元素会被更新可以看作随机的
@@ -76,22 +76,14 @@
     - 每次乘的数更大可以在模`P`后有更好的Uniformity
 
 ### `a`、`b`、`c`的初始化
-  - PRNG的每次更新所使用的参数中，必然包含之前步骤所得出的“新”值
-  - `a`直接取`i`，`b`和`c`则使用了[`state->x`](#state-xsee-code)和`f[]`
+- PRNG的每次更新所使用的参数中，必然包含之前步骤所得出的“新”值
+- `a`直接取`state->i`，`b`和`c`则使用了[`state->x`](#state-xsee-code)和`f[]`
 
-### `PHI`中`b`、`c`的去处
-  1. 更新过程中使用了`a`、`b`、`c`三个变量，而最终只取`a`，在打乱效果较可观的情况下，这样有点浪费计算量，故最后增加了根据`b`、`c`更改`f[]`的操作
-     ```c
-     uint8_t register m = (b + c)|1;
-     uint8_t register s = m;
-     for (int i = 0; i < LEN; i++)
-     {
-         f[i] = PHI(s)(f[i], m);
-         s++;
-     }
-     ```
-     其它作用见[是否是CSPRNG](#二是否是csprng)
-
+### `state->i`的更新
+- 
+  ```c
+  state->i = PHI(a)(old, b^c);
+  ```
 
 # 其它
 ### 一、这个PRNG的种子是什么？
@@ -104,143 +96,25 @@ CSPRNG: Cryptographically secure pseudorandom number generator
 
 CSPRNG要求
 1. 由当前的部分/全部状态不能倒推之前的状态/输出
-2. 通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)
+2. 通过[Next-bit test](https://en.wikipedia.org/wiki/Next-bit_test)，即在已知前N位输出的情况下，无法据此预测下一位输出。
 
 #### 关键：`f[]`的性质
-- `f[]`为一个用完即弃（因为每轮更新）的映射，且`f[]`在完全伪随机时还具有非线性、不可逆（非满射）的性质（`f[]`在更新过程中经过线性或满射状态的频率极低）
+- `f[]`为一个用完即弃（因为每轮会更新）的映射，且`f[]`在完全伪随机时还具有非线性、不可逆（非满射）的性质（`f[]`在更新过程中经过线性或满射状态的频率极低）
 - 若`f[]`未被赋种，则由有序的初态到完全伪随机状态的期望轮数为更新255个元素所需的轮数，即略小于 $E[256]$ ，到达该轮数之前的输出可以考虑舍弃。
 
 #### 状态无法反推
 1. 由于`update()`中`a`、`b`、`c`的迭代多次用到`f[]`，并用该结果更新`f[]`，故由当前状态无法倒推之前状态，更无法获得之前的输出。
-2. 此外，上述结果还用于更新整个`f[]`，故由当前状态无法获知之前任何元素的值
 
 #### 能否通过Next-bit test
-1. 通过Next-bit test的必要条件是通过Monobit test，统计上和理论上，该算法输出0和1的频率相等，故可转入讨论算法结构
-2. 考虑算法结构分析有：
-   1. 易知`i`为完全暴露，这里亦不考虑`x`的作用，认为`x`也被知晓
-   2. 故预测输出即为预测`update()`后`f[]`在`i`处的值
-   3. 而`f[]`在`update()`中被更改，欲获知`f[i]`，必须知道`f[]`中多个（具体参见代码）其它元素的值
-   4. 每次输出只会暴露`f[]`中一个元素的值，接下来证明任意一轮暴露的值（攻击者获取的信息）无法向前（更新前）或向后（下次更新）积累，即无法获取任一状态下`f[]`中的多个值
-
-3. 无法向更新前积累。这是[状态无法反推](#状态无法反推)中第二点的子结论： $f[a]$ 被知晓，不会泄露 $f[a]_{past}$
-
-4. 无法向下次更新积累。程序中 $f[a]$ 被输出后即丢弃并用`f[]`（含攻击者不知道的信息）对其进行更新，故不会透露 $f[a]_{subsequent}$
+这个要求其实是对PRNG的要求，是能通过随机性检测程序的充分条件
+1. 统计上，该程序可以通过NIST测试集
+2. 算法结构上，分析有：
+   1. 程序每次输出`f[]`在`i`处的值，攻击者每次获知当前状态下`f[]`中的一个值，但不知道是`f[]`第几个元素的值
+   2. 欲预测下次输出，需知道当前`f[i]`和`i`
+   3. `i`是在上一轮中通过`update()`计算得到，计算过程中使用了整个`*state`，欲知`i`，需先知`i`、`x`、映射`f[]`，而攻击者最理想的情况下也只能知道乱序的`f[]`，想要知道有序的`f[]`，必须掌握每次的`i`
+   4. 形成死锁，故无法直接预测下一位输出
 
 <!-- ================================================== -->
-# Codes
-## Code-00
-结构体
-```c
-// state = {f[], x, i}
-typedef struct _state_t
-{
-    uint8_t f[LEN];
-    uint8_t x;
-    uint8_t i;
-} state_t;
-...
-// in main():
-state_t _s = {0};
-state_t *state = &_s;
-```
-[Go back](#code-00-back)
-
-## Code-01
-`state`、`g`的选取
-```c
-#define IS_ODD(x) ((x)&1)
-#define LEN 256
-...
-// in main():
-uint8_t i = 0;
-for (uint64_t cnt = 0; cnt < stream_len; cnt++)
-{
-    j = f[i];
-    // fwrite(&j, 1, 1, out);
-    update(f, i);
-    i = j;
-}
-```
-[Go back](#code-01-back)
-
-
-## Code-02
-defines for `PHI`
-```c
-// cyclic rshift for uint8_t
-#define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
-
-#define OP_N (4) // 2^{2}
-#define TO_FOUR (0b11)
-#define TO_EIGHT (0b111)
-
-state_t *auxiliary = NULL; // auxiliary = state;
-uint8_t add(uint8_t x, uint8_t a) {return x + a;}
-uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
-uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);}
-uint8_t unarys(uint8_t x, uint8_t a) {return a? ~x: auxiliary->f[x];}
-
-typedef uint8_t (*operation)(uint8_t, uint8_t);
-operation phi[OP_N] = {add, xor, rshitf, unarys};
-#define PHI(x) (phi[(x)&TO_FOUR])
-```
----
-`update`
-```c
-uint8_t old = f[index];
-
-uint8_t new = 0;
-uint8_t register a = index;
-uint8_t register b = f[COMPRESS(a + state->x)];
-uint8_t register c = f[COMPRESS(state->x)];
-for (int cnt = 0; cnt < 22; cnt++)
-{
-    a = PHI(b)(a, c);
-    b = PHI(c)(b, f[a]);
-    c = PHI(f[a])(c, b);
-}
-
-uint8_t B = 0, C = 0;
-B = PHI(a)(f[c], b|1);
-C = PHI(a)(f[b], c|1);
-f[b] = B;
-f[c] = C;
-
-new = a;
-
-new += state->x;
-state->x = GRNG_ITER(state->x);
-
-new += (new == old);
-
-f[index] = new;
-
-return;
-```
-[Go back](#code-02-back)
-
-## Code-03
-`state->x`
-```c
-// ==================================
-// GRNG: Generator Random Number Generator 
-// P: 1567, G_most = 1565
-#define P 1567
-#define G 1565 // maximum primitive root
-#define G_MULT(x) (((x)*G)%P)
-#define GRNG_ITER(x) (G_MULT(x))
-#define COMPRESS(x) ((uint8_t)(x))
-// ==================================
-...
-// in update():
-uint8_t register a = index;
-uint8_t register b = f[COMPRESS(a + state->x)];
-uint8_t register c = f[COMPRESS(state->x)];
-...
-state->x = GRNG_ITER(state->x);
-
-```
-[Go back](#code-03-back)
 
 # Footnotes
 ## f-02

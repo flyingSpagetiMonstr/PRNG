@@ -99,6 +99,8 @@ void update(state_t* state)
 {
     #define f (state->f)
 
+    uint8_t old = f[state->i];
+
     uint8_t new = 0;
 
     // initialize a, b, c
@@ -111,13 +113,20 @@ void update(state_t* state)
         b = PHI(c)(b, f[a]);
         c = PHI(f[a])(c, b);
     }
+    // uint8_t B = 0, C = 0;
+    // B = PHI(a)(f[c], b|1);
+    // C = PHI(a)(f[b], c|1);
+    // f[b] = B;
+    // f[c] = C;
 
     new = a;
     new += state->x;
-    f[state->i] = new;
+    // new += (new == old);
 
+    f[state->i] = new;
+    // state->i = PHI(b^c)(old, b+c);
+    state->i = PHI(a)(old, b^c);
     state->x = GRNG_ITER(state->x);
-    state->i = b ^ c;
 
     #undef f
 }
