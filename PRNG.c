@@ -11,7 +11,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
+#define STREAM_LEN (MILLION*100) // required stream length (by bit)
 
 // ==================================
 // definitions for iteration of state->x
@@ -59,55 +59,50 @@ void peak(state_t *state, int stream_len);
 
 int main()
 {
-    uint8_t j = 0;
-
     state_t _s = {0};
     state_t *state = &_s;
     auxiliary = state;
-
+    
     init_state(state, load_state);
+    
+    FILE *out_file = fopen(OUTPUT, "wb");
 
-    FILE *out = fopen(OUTPUT, "wb");
-
-    int ajusted_stream_len = STREAM_LEN/8; // generating one byte per round
+    int byte_n = STREAM_LEN/8; // generating one byte per round
 
     puts("Generating...");
     clock_t start_time = clock();
-    #define i (state->i)
-    for (uint64_t cnt = 0; cnt < ajusted_stream_len; cnt++)
+    #define f (state->f)
+    uint8_t byte = 0;
+    for (uint64_t cnt = 1; cnt <= byte_n; cnt++)
     {
-        j = state->f[i];
-        update(state); // mainly updates f[i]
-        i = j;
+        byte = f[state->i];
+        update(state); // mainly updates f[i] and i
 
-        fwrite(&j, 1, 1, out);
-        if ((cnt % (ajusted_stream_len/10)) == (ajusted_stream_len/10-1))
+        fwrite(&byte, 1, 1, out_file);
+        if ((cnt % (byte_n/10)) == 0)
             printf("."); // show progress
     }
-    #undef i
+    #undef f
     clock_t end_time = clock();
     puts("FIN");
 
-    double elapsed_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-    printf("Time cost: %.6f seconds\n", elapsed_time);
+    double time_cost = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+    printf("Time cost: %.6f seconds\n", time_cost);
 
     printf("Dumping state into %s...\n", DUMP_FILE);
     dump(state, DUMP_FILE, sizeof(*state));
 
-    fclose(out);
+    fclose(out_file);
 }
 
 void update(state_t* state)
 {
     #define f (state->f)
-    #define index (state->i)
-
-    uint8_t old = f[index];
 
     uint8_t new = 0;
 
     // initialize a, b, c
-    uint8_t register a = index;
+    uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
     for (int cnt = 0; cnt < 22; cnt++)
@@ -117,24 +112,13 @@ void update(state_t* state)
         c = PHI(f[a])(c, b);
     }
 
-    uint8_t register m = (b + c)|1; // mask out unary:f
-    uint8_t register s = m;
-    for (int i = 0; i < LEN; i++)
-    {
-        f[i] = PHI(s)(f[i], m);
-        s++;
-    }
-
     new = a;
-
     new += state->x;
+    f[state->i] = new;
+
     state->x = GRNG_ITER(state->x);
+    state->i = b ^ c;
 
-    new += (new == old);
-
-    f[index] = new;
-
-    #undef index
     #undef f
 }
 

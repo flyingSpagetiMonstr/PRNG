@@ -20,9 +20,11 @@ For details on how/why it works, see `explain.md` (in simplified Chinese)
 
 ---
 
-There are two versions: 
+There are three versions: 
+- on branch "hide-i"
+  - current version, developing, branched from last version of "master"
 - on branch "master"
-  - current version, generating byte by byte
+  - legacy version, generating byte by byte.
 - on branch "bit"
   - legacy version, generating bit by bit, and the uniformity is not so good
 
