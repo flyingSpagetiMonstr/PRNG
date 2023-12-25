@@ -11,7 +11,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*100) // required stream length (by bit)
+#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
 
 // ==================================
 // definitions for iteration of state->x
@@ -100,9 +100,10 @@ void update(state_t* state)
     #define f (state->f)
 
     uint8_t old = f[state->i];
-    uint8_t new = 0;
 
-    // initialize a, b, c
+    uint8_t new = 0; // new value of f[i]
+    uint8_t i_new = 0; // new value of i
+
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
@@ -117,9 +118,16 @@ void update(state_t* state)
     new += state->x;
     new += (new == old);
 
+    i_new = PHI(a)(old^(state->i), (b^c)|1); // mask out unarys:f
+
+    uint8_t B = 0, C = 0;
+    B = PHI(a)(f[b], c|1);
+    C = PHI(a)(f[c], b|1);
+    f[b] = C;
+    f[c] = B;
+
     f[state->i] = new;
-    state->i = PHI(a)(old, b^c);
-    // state->i = PHI(a)(b^c, old); ################################################
+    state->i = i_new;
     state->x = GRNG_ITER(state->x);
 
     #undef f
