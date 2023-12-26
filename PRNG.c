@@ -71,18 +71,18 @@ int main()
 
     puts("Generating...");
     clock_t start_time = clock();
-    #define f (state->f)
     uint8_t byte = 0;
+    #define g(s) (s->f[s->i])
     for (uint64_t cnt = 1; cnt <= byte_n; cnt++)
     {
-        byte = f[state->i];
+        byte = g(state);
         update(state); // mainly updates f[i] and i
 
         fwrite(&byte, 1, 1, out_file);
         if ((cnt % (byte_n/10)) == 0)
             printf("."); // show progress
     }
-    #undef f
+    #undef g 
     clock_t end_time = clock();
     puts("FIN");
 
