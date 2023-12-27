@@ -31,27 +31,39 @@ enum _init_method {
 
 // ==================================
 // definitions for funtion "PHI"
-#define OP_N (4) // 2^{2}
+
 // ... .. .
 #define TO_TWO(x) ((x)&0b1)
 #define TO_FOUR(x) (((x)>>1)&0b11)
 #define TO_EIGHT(x) (((x)>>3)&0b111)
 
 // cyclic rshift for uint8_t
-#define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
+#define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
 
 uint8_t *_f = NULL; 
 // _f will be initialized to be state->f.
 // Acts as a global variable, providing global accessibility to f.
 
-uint8_t add(uint8_t x, uint8_t a) {return x + a;}
-uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
-uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, TO_EIGHT(a));} // cyclic rshift
-uint8_t unarys(uint8_t x, uint8_t a) {return TO_TWO(a)? _f[x]: ~x;}
+enum _operations {add /*= 0*/, xor, rshitf, unarys};
+#define PHI(a, b, c) switch (TO_FOUR(b)) {             \
+    case add: (a) += (c);                        break;\
+    case xor: (a) ^= (c);                        break;\
+    case rshitf: (a) = RSHIFT((a), TO_EIGHT(c)); break;\
+    case unarys: (a) = TO_TWO(c)? _f[a]: ~(a);   break;\
+    default:                                     break;\
+}
+#undef PHI
+// ==================================
+uint8_t zadd(uint8_t x, uint8_t a) {return x + a;}
+uint8_t zxor(uint8_t x, uint8_t a) {return x ^ a;} 
+uint8_t zrshitf(uint8_t x, uint8_t a) {return RSHIFT(x, TO_EIGHT(a));} // cyclic rshift
+uint8_t zunarys(uint8_t x, uint8_t a) {return TO_TWO(a)? _f[x]: ~x;}
 
+#define OP_N 4
 typedef uint8_t (*operation)(uint8_t, uint8_t);
-operation phi[OP_N] = {add, xor, rshitf, unarys};
-#define PHI(x) (phi[TO_FOUR(x)])
+operation phi[OP_N] = {zadd, zxor, zrshitf, zunarys};
+// #define PHI(x) (phi[TO_FOUR(x)])
+#define PHI(a, b, c) a = phi[TO_FOUR(b)](a, c)
 // ==================================
 
 void update(state_t* state);
@@ -61,31 +73,31 @@ void pass_to_diehard(uint8_t byte);
 
 int main()
 {
-// FILE *stdout_redir = freopen("dumps/info.txt", "w", stdout);
 
     state_t _s = {0};
     state_t *state = &_s;
     _f = state->f;
     
-    init_state(state, load_state);
+    init_state(state, rand_state);
     
     FILE *out_file = fopen(OUTPUT, "wb");
 
     uint32_t byte_n = STREAM_LEN/8; // generating one byte per round
 
     // puts("Generating...");
-    clock_t start_time = clock();
     uint8_t byte = 0;
+    clock_t start_time = clock();
     #define g(s) (s->f[s->i])
-    for (uint32_t cnt = 1; /*cnt <= byte_n*/ ; cnt++)
+    for (uint32_t cnt = 1; cnt <= byte_n ; cnt++)
+    // for (uint32_t cnt = 1;  ; cnt++)
     {
         byte = g(state);
         update(state); // mainly updates f[i] and i
 
-        // fwrite(&byte, 1, 1, out_file);
-        pass_to_diehard(byte);
-        // if ((cnt % (byte_n/10)) == 0)
-        //     printf("."), fflush(stdout); // show progress
+        fwrite(&byte, 1, 1, out_file);
+        // pass_to_diehard(byte);
+        if ((cnt % (byte_n/10)) == 0)
+            printf("."), fflush(stdout); // show progress
     }
     #undef g 
     clock_t end_time = clock();
@@ -114,20 +126,21 @@ void update(state_t* state)
     uint8_t register c = f[COMPRESS(state->x)];
     for (int cnt = 0; cnt < 22; cnt++)
     {
-        a = PHI(b)(a, c);
-        b = PHI(c)(b, f[a]);
-        c = PHI(f[a])(c, b);
+        PHI(a, b, c);
+        PHI(b, c, f[a]);
+        PHI(c, f[a], b);
     }
 
     new = a;
     new += state->x;
     new += (new == old);
 
-    i_new = PHI(a)(old^(state->i), (b^c)&0xfe); // mask out unarys:f
+    i_new = (state->i)^old;
+    PHI(i_new, a, (b^c)&0xfe); // mask out unarys:f
 
     uint8_t B = 0, C = 0;
-    B = PHI(a)(f[b], c&0xfe);
-    C = PHI(a)(f[c], b&0xfe);
+    PHI(f[b], a, c&0xfe);
+    PHI(f[c], a, b&0xfe);
     f[b] = C;
     f[c] = B;
 
