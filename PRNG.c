@@ -77,8 +77,8 @@ void inline update(state_t* state)
 
     uint8_t old = f[state->i];
 
-    uint8_t new = 0; // new value of f[i]
-    uint8_t i_new = 0; // new value of i
+    uint8_t register new = 0; // new value of f[i]
+    uint8_t register i_new = 0; // new value of i
 
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
