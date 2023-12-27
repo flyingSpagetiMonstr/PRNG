@@ -7,6 +7,7 @@ sts-2.1.2
 others/
 objs/
 dumps/
+dumps copy/
 .vscode
 
 measure.ps1
