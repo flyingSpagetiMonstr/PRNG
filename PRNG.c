@@ -61,7 +61,7 @@ void pass_to_diehard(uint8_t byte);
 
 int main()
 {
-    FILE *stdout_redir = freopen("dumps/info.txt", "w", stdout);
+// FILE *stdout_redir = freopen("dumps/info.txt", "w", stdout);
 
     state_t _s = {0};
     state_t *state = &_s;
@@ -73,20 +73,19 @@ int main()
 
     uint32_t byte_n = STREAM_LEN/8; // generating one byte per round
 
-    puts("Generating...");
+    // puts("Generating...");
     clock_t start_time = clock();
     uint8_t byte = 0;
     #define g(s) (s->f[s->i])
-    fclose(stdout_redir);
     for (uint32_t cnt = 1; /*cnt <= byte_n*/ ; cnt++)
     {
         byte = g(state);
         update(state); // mainly updates f[i] and i
 
         // fwrite(&byte, 1, 1, out_file);
-        // pass_to_diehard(byte);
-        if ((cnt % (byte_n/10)) == 0)
-            printf("."), fflush(stdout); // show progress
+        pass_to_diehard(byte);
+        // if ((cnt % (byte_n/10)) == 0)
+        //     printf("."), fflush(stdout); // show progress
     }
     #undef g 
     clock_t end_time = clock();
@@ -162,7 +161,7 @@ void init_state(state_t *state, enum _init_method m)
 
     case rand_state:
         // use c rand() to initialize state
-        puts("Seeding state...");
+        // puts("Seeding state...");
         srand(time(0));
         for (int i = 0; i < LEN; i++)
         {
@@ -175,7 +174,7 @@ void init_state(state_t *state, enum _init_method m)
 
     case load_state:
         // load state from previous dumped state
-        printf("Loading state from %s...\n", DUMP_FILE);
+        // printf("Loading state from %s...\n", DUMP_FILE);
         load(state, DUMP_FILE, sizeof(*state));
         load(&stream_len, INFO, sizeof(stream_len));
         // if nothing to load or load error (error in file operation),
@@ -183,7 +182,7 @@ void init_state(state_t *state, enum _init_method m)
         break;
 
     default:
-        puts("No such option, initializing by default_state");
+        // puts("No such option, initializing by default_state");
         break;
     }
     stream_len += STREAM_LEN; // update stream_len
