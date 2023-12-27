@@ -177,6 +177,7 @@ void init_state(state_t *state, enum _init_method m)
         // printf("Loading state from %s...\n", DUMP_FILE);
         load(state, DUMP_FILE, sizeof(*state));
         load(&stream_len, INFO, sizeof(stream_len));
+        state->x = BOUND(state->x);
         // if nothing to load or load error (error in file operation),
         // behavior would be same as default_state
         break;
