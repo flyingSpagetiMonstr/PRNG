@@ -151,6 +151,7 @@ void init_state(state_t *state, enum _init_method m)
             printf("Failed to load from %s, maybe the route doesn't exist.\n", DUMP_FILE);
         if(!load(&stream_len, INFO, sizeof(stream_len)))
             printf("Failed to load from %s, maybe the route doesn't exist.\n", INFO);;
+        state->x = BOUND(state->x);
         // if nothing to load or load error (error in file operation),
         // behavior would be same as default_state
         break;
