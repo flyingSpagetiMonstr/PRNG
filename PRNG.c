@@ -4,8 +4,8 @@
 #include <time.h>
 
 #include "PRNG.h"
-#include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 #include "components.h"
+#include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 #include "dieharder.h"
 
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
@@ -39,7 +39,6 @@ void inline update(state_t* state);
 
 void init_state(state_t *state, enum _init_method m);
 void peak(state_t *state, int stream_len);
-void pass_to_dieharder(uint8_t byte);
 
 int main()
 {
@@ -65,8 +64,7 @@ int main()
     end_time = clock();
     puts("FIN");
 
-    double time_cost = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-    printf("Time cost: %.6f seconds\n", time_cost);
+    printf("Time cost: %.6f seconds\n", ((double)(end_time - start_time)) / CLOCKS_PER_SEC);
     printf("Dumping state into %s...\n", DUMP_FILE);
     if(!dump(state, DUMP_FILE, sizeof(*state)))
         printf("Failed to dump into %s, maybe the route doesn't exist.\n", DUMP_FILE);
