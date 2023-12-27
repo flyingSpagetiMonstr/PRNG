@@ -1,32 +1,39 @@
 CC = gcc -O1
-OBJS = objs/PRNG.o objs/dump.o
 FLAGS = -I include/
-TARGET = PRNG.exe
 
+OBJS = objs/PRNG.o objs/dump.o
+TARGET = $(if $(shell echo $$OS), PRNG.exe, PRNG) # OS-specific 
 
-.PHONY: run clearobj cleardump asm build rebuild
+RM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
 
-run: $(TARGET)
-	.\PRNG
+.PHONY: run clearobj cleardump asm build rebuild re
+
+all: rebuild run 
+
+run: 
+	./PRNG
 
 build: $(TARGET)
 
 rebuild: clean build
 
-clearobj:
-	del /s *.o
+clean: clearobj
+	$(RM) $(TARGET)
 
-clean: 
-	del $(TARGET)
+clearobj:
+ifeq ($(OS), Windows_NT)  # Check for Windows
+	$(RM) *.o
+else
+	$(RM) objs/*.o
+endif
 
 cleardump: 
-	del .\dumps\stream_len.dat
-	del .\dumps\state.dat
+	$(RM) .\dumps\stream_len.dat
+	$(RM) .\dumps\state.dat
 
 asm: PRNG.asm
 
-
-PRNG.exe: $(OBJS) 
+$(TARGET): $(OBJS) 
 	$(CC) -o $@ $(OBJS)
 
 objs/PRNG.o: PRNG.c include/PRNG.h include/dump.h

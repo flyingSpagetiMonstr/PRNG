@@ -57,9 +57,12 @@ operation phi[OP_N] = {add, xor, rshitf, unarys};
 void update(state_t* state);
 void init_state(state_t *state, enum _init_method m);
 void peak(state_t *state, int stream_len);
+void pass_to_diehard(uint8_t byte);
 
 int main()
 {
+    FILE *stdout_redir = freopen("dumps/info.txt", "w", stdout);
+
     state_t _s = {0};
     state_t *state = &_s;
     _f = state->f;
@@ -68,20 +71,22 @@ int main()
     
     FILE *out_file = fopen(OUTPUT, "wb");
 
-    int byte_n = STREAM_LEN/8; // generating one byte per round
+    uint32_t byte_n = STREAM_LEN/8; // generating one byte per round
 
     puts("Generating...");
     clock_t start_time = clock();
     uint8_t byte = 0;
     #define g(s) (s->f[s->i])
-    for (uint64_t cnt = 1; cnt <= byte_n; cnt++)
+    fclose(stdout_redir);
+    for (uint32_t cnt = 1; /*cnt <= byte_n*/ ; cnt++)
     {
         byte = g(state);
         update(state); // mainly updates f[i] and i
 
-        fwrite(&byte, 1, 1, out_file);
+        // fwrite(&byte, 1, 1, out_file);
+        // pass_to_diehard(byte);
         if ((cnt % (byte_n/10)) == 0)
-            printf("."); // show progress
+            printf("."), fflush(stdout); // show progress
     }
     #undef g 
     clock_t end_time = clock();
@@ -193,4 +198,24 @@ void peak(state_t *state, int stream_len)
     printf("x: %d\n", state->x);
     printf("i: %d\n", state->i);
     printf("stream_len: %d\n", stream_len);
+}
+
+struct _diehard_buffer 
+{
+    uint8_t bytes[4];
+    uint8_t i;
+} diehard_buffer = {0};
+
+void pass_to_diehard(uint8_t byte)
+{
+    diehard_buffer.bytes[diehard_buffer.i] = byte;
+    if (diehard_buffer.i == 3)
+    {
+        fwrite(diehard_buffer.bytes, 1, 4, stdout);
+        diehard_buffer.i = 0;
+    }
+    else
+    {
+        diehard_buffer.i++;
+    }
 }
