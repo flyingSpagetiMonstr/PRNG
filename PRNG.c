@@ -13,6 +13,15 @@
 #define MILLION (1000000) 
 #define STREAM_LEN (MILLION*100) // required stream length (by bit)
 
+#ifndef DIE_HARDER
+#define YIELD(byte) fwrite(&byte, 1, 1, out_file)
+#else
+#define YIELD(byte) pass_to_dieharder(byte)
+// "disable" printing to console:
+#define puts(x)
+#define printf(...)
+#endif
+
 // ==================================
 // definitions for iteration of state->x
 #define P 1567 // prime
@@ -23,15 +32,14 @@
 #define BOUND(x) ((x)%(P-1)+1) // convert x to 1 ~ P-1
 
 // ==================================
+// three methods to init state
 enum _init_method {
     default_state, // = 0
     rand_state,
     load_state
 };
-
 // ==================================
-// definitions for funtion "PHI"
-
+// defines for funtion "PHI"
 // ... .. .
 #define TO_TWO(x) ((x)&0b1)
 #define TO_FOUR(x) (((x)>>1)&0b11)
@@ -45,6 +53,8 @@ uint8_t *_f = NULL;
 // Acts as a global variable, providing global accessibility to f.
 
 enum _operations {add /*= 0*/, xor, rshitf, unarys};
+
+/*! @note a = a [b] c, where b is an operation */
 #define PHI(a, b, c) switch (TO_FOUR(b)) {             \
     case add: (a) += (c);                        break;\
     case xor: (a) ^= (c);                        break;\
@@ -52,53 +62,41 @@ enum _operations {add /*= 0*/, xor, rshitf, unarys};
     case unarys: (a) = TO_TWO(c)? _f[a]: ~(a);   break;\
     default:                                     break;\
 }
-#undef PHI
-// ==================================
-uint8_t zadd(uint8_t x, uint8_t a) {return x + a;}
-uint8_t zxor(uint8_t x, uint8_t a) {return x ^ a;} 
-uint8_t zrshitf(uint8_t x, uint8_t a) {return RSHIFT(x, TO_EIGHT(a));} // cyclic rshift
-uint8_t zunarys(uint8_t x, uint8_t a) {return TO_TWO(a)? _f[x]: ~x;}
 
-#define OP_N 4
-typedef uint8_t (*operation)(uint8_t, uint8_t);
-operation phi[OP_N] = {zadd, zxor, zrshitf, zunarys};
-// #define PHI(x) (phi[TO_FOUR(x)])
-#define PHI(a, b, c) a = phi[TO_FOUR(b)](a, c)
 // ==================================
 
-void update(state_t* state);
+/*! @note mainly updates f[i] and i*/
+void update(state_t* state); 
+
 void init_state(state_t *state, enum _init_method m);
 void peak(state_t *state, int stream_len);
-void pass_to_diehard(uint8_t byte);
+void pass_to_dieharder(uint8_t byte);
 
 int main()
 {
-
     state_t _s = {0};
     state_t *state = &_s;
     _f = state->f;
     
-    init_state(state, rand_state);
+    init_state(state, load_state);
     
     FILE *out_file = fopen(OUTPUT, "wb");
 
     uint32_t byte_n = STREAM_LEN/8; // generating one byte per round
 
-    // puts("Generating...");
+    puts("Generating...");
     uint8_t byte = 0;
     clock_t start_time = clock();
     #define g(s) (s->f[s->i])
+    #define yield(x) YIELD(x)
+    // while(1)
     for (uint32_t cnt = 1; cnt <= byte_n ; cnt++)
-    // for (uint32_t cnt = 1;  ; cnt++)
     {
         byte = g(state);
-        update(state); // mainly updates f[i] and i
-
-        fwrite(&byte, 1, 1, out_file);
-        // pass_to_diehard(byte);
-        if ((cnt % (byte_n/10)) == 0)
-            printf("."), fflush(stdout); // show progress
+        update(state);
+        // yield(byte);
     }
+    #undef yield
     #undef g 
     clock_t end_time = clock();
     puts("FIN");
@@ -107,7 +105,8 @@ int main()
     printf("Time cost: %.6f seconds\n", time_cost);
 
     printf("Dumping state into %s...\n", DUMP_FILE);
-    dump(state, DUMP_FILE, sizeof(*state));
+    if(!dump(state, DUMP_FILE, sizeof(*state)))
+        printf("Failed to dump into %s, maybe the route doesn't exist.\n", DUMP_FILE);
 
     fclose(out_file);
 }
@@ -138,11 +137,11 @@ void update(state_t* state)
     i_new = (state->i)^old;
     PHI(i_new, a, (b^c)&0xfe); // mask out unarys:f
 
-    uint8_t B = 0, C = 0;
-    PHI(f[b], a, c&0xfe);
-    PHI(f[c], a, b&0xfe);
-    f[b] = C;
-    f[c] = B;
+    uint8_t B = f[b], C = f[c];
+    PHI(B, a, c&0xfe);
+    PHI(C, a, b&0xfe);
+    f[b] = B;
+    f[c] = C;
 
     f[state->i] = new;
     state->i = i_new;
@@ -174,7 +173,7 @@ void init_state(state_t *state, enum _init_method m)
 
     case rand_state:
         // use c rand() to initialize state
-        // puts("Seeding state...");
+        puts("Seeding state...");
         srand(time(0));
         for (int i = 0; i < LEN; i++)
         {
@@ -187,21 +186,24 @@ void init_state(state_t *state, enum _init_method m)
 
     case load_state:
         // load state from previous dumped state
-        // printf("Loading state from %s...\n", DUMP_FILE);
-        load(state, DUMP_FILE, sizeof(*state));
-        load(&stream_len, INFO, sizeof(stream_len));
+        printf("Loading state from %s...\n", DUMP_FILE);
+        if(!load(state, DUMP_FILE, sizeof(*state)))
+            printf("Failed to load from %s, maybe the route doesn't exist.\n", DUMP_FILE);
+        if(!load(&stream_len, INFO, sizeof(stream_len)))
+            printf("Failed to load from %s, maybe the route doesn't exist.\n", INFO);;
         // if nothing to load or load error (error in file operation),
         // behavior would be same as default_state
         break;
 
     default:
-        // puts("No such option, initializing by default_state");
+        puts("No such option, initializing by default_state");
         break;
     }
     stream_len += STREAM_LEN; // update stream_len
 
     // peak(state, stream_len); exit(0);
-    dump(&stream_len, INFO, sizeof(stream_len)); // store stream_len into file
+    if (!dump(&stream_len, INFO, sizeof(stream_len))) // store stream_len into file
+        printf("Failed to dump into %s, maybe the route doesn't exist.\n", INFO);
 }
 
 void peak(state_t *state, int stream_len)
@@ -212,22 +214,22 @@ void peak(state_t *state, int stream_len)
     printf("stream_len: %d\n", stream_len);
 }
 
-struct _diehard_buffer 
+struct _dieharder_buffer 
 {
     uint8_t bytes[4];
     uint8_t i;
-} diehard_buffer = {0};
+} dieharder_buffer = {0};
 
-void pass_to_diehard(uint8_t byte)
+void pass_to_dieharder(uint8_t byte)
 {
-    diehard_buffer.bytes[diehard_buffer.i] = byte;
-    if (diehard_buffer.i == 3)
+    dieharder_buffer.bytes[dieharder_buffer.i] = byte;
+    if (dieharder_buffer.i == 3)
     {
-        fwrite(diehard_buffer.bytes, 1, 4, stdout);
-        diehard_buffer.i = 0;
+        fwrite(dieharder_buffer.bytes, 1, 4, stdout);
+        dieharder_buffer.i = 0;
     }
     else
     {
-        diehard_buffer.i++;
+        dieharder_buffer.i++;
     }
 }
