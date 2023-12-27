@@ -11,7 +11,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
+#define STREAM_LEN (MILLION*100) // required stream length (by bit)
 
 // ==================================
 // definitions for iteration of state->x
@@ -32,25 +32,26 @@ enum _init_method {
 // ==================================
 // definitions for funtion "PHI"
 #define OP_N (4) // 2^{2}
-#define TO_TWO (0b1)
-#define TO_FOUR (0b11)
-#define TO_EIGHT (0b111)
+// ... .. .
+#define TO_TWO(x) ((x)&0b1)
+#define TO_FOUR(x) (((x)>>1)&0b11)
+#define TO_EIGHT(x) (((x)>>3)&0b111)
 
 // cyclic rshift for uint8_t
 #define RSHIFT(x, n) ((uint8_t)(((x)>>(n))^((x)<<(8-(n))))) 
 
-state_t *auxiliary = NULL; 
-// "auxiliary" will be initialized by "state_t *state", 
-// working as a global variable to make state accessible from anywhere
+uint8_t *_f = NULL; 
+// _f will be initialized to be state->f.
+// Acts as a global variable, providing global accessibility to f.
 
 uint8_t add(uint8_t x, uint8_t a) {return x + a;}
 uint8_t xor(uint8_t x, uint8_t a) {return x ^ a;} 
-uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, a&TO_EIGHT);} // cyclic rshift
-uint8_t unarys(uint8_t x, uint8_t a) {return (a&TO_TWO)? ~x: auxiliary->f[x];}
+uint8_t rshitf(uint8_t x, uint8_t a) {return RSHIFT(x, TO_EIGHT(a));} // cyclic rshift
+uint8_t unarys(uint8_t x, uint8_t a) {return TO_TWO(a)? _f[x]: ~x;}
 
 typedef uint8_t (*operation)(uint8_t, uint8_t);
 operation phi[OP_N] = {add, xor, rshitf, unarys};
-#define PHI(x) (phi[(x)&TO_FOUR])
+#define PHI(x) (phi[TO_FOUR(x)])
 // ==================================
 
 void update(state_t* state);
@@ -61,7 +62,7 @@ int main()
 {
     state_t _s = {0};
     state_t *state = &_s;
-    auxiliary = state;
+    _f = state->f;
     
     init_state(state, load_state);
     
@@ -118,11 +119,11 @@ void update(state_t* state)
     new += state->x;
     new += (new == old);
 
-    i_new = PHI(a)(old^(state->i), (b^c)|1); // mask out unarys:f
+    i_new = PHI(a)(old^(state->i), (b^c)&0xfe); // mask out unarys:f
 
     uint8_t B = 0, C = 0;
-    B = PHI(a)(f[b], c|1);
-    C = PHI(a)(f[c], b|1);
+    B = PHI(a)(f[b], c&0xfe);
+    C = PHI(a)(f[c], b&0xfe);
     f[b] = C;
     f[c] = B;
 
