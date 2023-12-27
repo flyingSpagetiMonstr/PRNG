@@ -5,6 +5,8 @@
 
 #include "PRNG.h"
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
+#include "phi.h"
+#include "GRNG.h"
 
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 #define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
@@ -22,14 +24,7 @@
 #define printf(...)
 #endif
 
-// ==================================
-// definitions for iteration of state->x
-#define P 1567 // prime
-#define G 1565 // maximum primitive root
-#define G_MULT(x) (((x)*G)%P)
-#define GRNG_ITER(x) (G_MULT(x))
-#define COMPRESS(x) ((uint8_t)(x))
-#define BOUND(x) ((x)%(P-1)+1) // convert x to 1 ~ P-1
+#define G(s) (s->f[s->i])
 
 // ==================================
 // three methods to init state
@@ -38,35 +33,9 @@ enum _init_method {
     rand_state,
     load_state
 };
-// ==================================
-// defines for funtion "PHI"
-// ... .. .
-#define TO_TWO(x) ((x)&0b1)
-#define TO_FOUR(x) (((x)>>1)&0b11)
-#define TO_EIGHT(x) (((x)>>3)&0b111)
-
-// cyclic rshift for uint8_t
-#define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
-
-uint8_t *_f = NULL; 
-// _f will be initialized to be state->f.
-// Acts as a global variable, providing global accessibility to f.
-
-enum _operations {add /*= 0*/, xor, rshitf, unarys};
-
-/*! @note a = a [b] c, where b is an operation */
-#define PHI(a, b, c) switch (TO_FOUR(b)) {             \
-    case add: (a) += (c);                        break;\
-    case xor: (a) ^= (c);                        break;\
-    case rshitf: (a) = RSHIFT((a), TO_EIGHT(c)); break;\
-    case unarys: (a) = TO_TWO(c)? _f[a]: ~(a);   break;\
-    default:                                     break;\
-}
-
-// ==================================
 
 /*! @note mainly updates f[i] and i*/
-void update(state_t* state); 
+void inline update(state_t* state); 
 
 void init_state(state_t *state, enum _init_method m);
 void peak(state_t *state, int stream_len);
@@ -74,44 +43,37 @@ void pass_to_dieharder(uint8_t byte);
 
 int main()
 {
-    state_t _s = {0};
-    state_t *state = &_s;
+    uint8_t byte = 0; 
+    uint32_t cnt = 0, byte_n = STREAM_LEN/8; // generating one byte per round
+    state_t _s = {0}, *state = &_s;
+    clock_t start_time = 0 , end_time = 0;
+    FILE *out_file = fopen(OUTPUT, "wb");
+
     _f = state->f;
     
     init_state(state, load_state);
-    
-    FILE *out_file = fopen(OUTPUT, "wb");
-
-    uint32_t byte_n = STREAM_LEN/8; // generating one byte per round
 
     puts("Generating...");
-    uint8_t byte = 0;
-    clock_t start_time = clock();
-    #define g(s) (s->f[s->i])
-    #define yield(x) YIELD(x)
+    start_time = clock();
     // while(1)
-    for (uint32_t cnt = 1; cnt <= byte_n ; cnt++)
+    for (cnt = 1; cnt <= byte_n ; cnt++)
     {
-        byte = g(state);
+        byte = G(state);
         update(state);
-        // yield(byte);
+        // YIELD(byte);
     }
-    #undef yield
-    #undef g 
-    clock_t end_time = clock();
+    end_time = clock();
     puts("FIN");
 
     double time_cost = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     printf("Time cost: %.6f seconds\n", time_cost);
-
     printf("Dumping state into %s...\n", DUMP_FILE);
     if(!dump(state, DUMP_FILE, sizeof(*state)))
         printf("Failed to dump into %s, maybe the route doesn't exist.\n", DUMP_FILE);
-
     fclose(out_file);
 }
 
-void update(state_t* state)
+void inline update(state_t* state)
 {
     #define f (state->f)
 
@@ -158,7 +120,7 @@ void init_state(state_t *state, enum _init_method m)
     // last reset of state (i.e. initializing from default_state or rand_state) 
 
     // default_state:
-    state->x = G;
+    state->x = 1;
     state->i = END/4;
     for (int i = 0; i < LEN; i++)
     {

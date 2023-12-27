@@ -1,6 +1,7 @@
 CC = gcc -O1
 FLAGS = -I include/
 
+HEADERS = include/PRNG.h include/phi.h include/dump.h include/GRNG.h
 OBJS = objs/PRNG.o objs/dump.o
 TARGET = $(if $(shell echo $$OS), PRNG.exe, PRNG) # OS-specific 
 
@@ -36,11 +37,11 @@ asm: PRNG.asm
 $(TARGET): $(OBJS) 
 	$(CC) -o $@ $(OBJS)
 
-objs/PRNG.o: PRNG.c include/PRNG.h include/dump.h
+objs/PRNG.o: PRNG.c $(HEADERS)
 	$(CC) $(FLAGS) -c -o $@ $<
 
 objs/dump.o: libs/dump.c include/dump.h include/PRNG.h 
 	$(CC) $(FLAGS) -c -o $@ $<
 
-PRNG.asm: PRNG.c include/PRNG.h include/dump.h 
+PRNG.asm: PRNG.c $(HEADERS) 
 	$(CC) $(FLAGS) -S -o $@ $<
