@@ -5,8 +5,8 @@
 
 #include "PRNG.h"
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
-#include "phi.h"
-#include "GRNG.h"
+#include "components.h"
+#include "dieharder.h"
 
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 #define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
@@ -174,24 +174,4 @@ void peak(state_t *state, int stream_len)
     printf("x: %d\n", state->x);
     printf("i: %d\n", state->i);
     printf("stream_len: %d\n", stream_len);
-}
-
-struct _dieharder_buffer 
-{
-    uint8_t bytes[4];
-    uint8_t i;
-} dieharder_buffer = {0};
-
-void pass_to_dieharder(uint8_t byte)
-{
-    dieharder_buffer.bytes[dieharder_buffer.i] = byte;
-    if (dieharder_buffer.i == 3)
-    {
-        fwrite(dieharder_buffer.bytes, 1, 4, stdout);
-        dieharder_buffer.i = 0;
-    }
-    else
-    {
-        dieharder_buffer.i++;
-    }
 }
