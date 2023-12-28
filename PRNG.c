@@ -117,7 +117,6 @@ void inline update(state_t* state)
     // ==============================================================
     goto _phi; phi:
     {
-        asm volatile("in_phi:");
         _PHI(_param1, _param2, _param3);
         // fprintf(stdout, "%d %d %d\n", _param1, _param2, _param3);
         // fprintf(stdout, "rip: %d\n", _rip);
