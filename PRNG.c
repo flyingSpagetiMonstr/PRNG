@@ -17,8 +17,10 @@
 
 #ifndef DIE_HARDER
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
+#define CONDITION (cnt <= byte_n)
 #else
 #define YIELD(byte) pass_to_dieharder(byte)
+#define CONDITION 1
 // "disable" printing to console:
 #define puts(x)
 #define printf(...)
@@ -54,8 +56,7 @@ int main()
 
     puts("Generating...");
     start_time = clock();
-    // while(1)
-    for (cnt = 1; cnt <= byte_n ; cnt++)
+    for (cnt = 1; CONDITION; cnt++)
     {
         byte = G(state);
         update(state);
