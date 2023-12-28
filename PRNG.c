@@ -2,23 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 #include "PRNG.h"
 #include "components.h"
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 #include "dieharder.h"
 
-#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
+#define OUTPUT "sts-2.1.2/data/runtest.dat" // where the generated bits will be stored
 #define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
 #define STREAM_LEN (MILLION*100) // required stream length (by bit)
 
+// #define DIE_HARDER
 #ifndef DIE_HARDER
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
+#define CONDITION (cnt <= byte_n)
 #else
 #define YIELD(byte) pass_to_dieharder(byte)
+#define CONDITION 1
 // "disable" printing to console:
 #define puts(x)
 #define printf(...)
@@ -50,12 +54,11 @@ int main()
 
     _f = state->f;
     
-    init_state(state, load_state);
+    init_state(state, rand_state);
 
     puts("Generating...");
     start_time = clock();
-    // while(1)
-    for (cnt = 1; cnt <= byte_n ; cnt++)
+    for (cnt = 1; CONDITION ; cnt++)
     {
         byte = G(state);
         update(state);
@@ -73,6 +76,10 @@ int main()
 
 void inline update(state_t* state)
 {
+    // for calling PHI
+    uint8_t register _param1 = 0, _param2 = 0, _param3 = 0;
+    uint64_t register _rip = 0;
+    // ==============================================================
     #define f (state->f)
 
     uint8_t old = f[state->i];
@@ -106,8 +113,21 @@ void inline update(state_t* state)
     f[state->i] = new;
     state->i = i_new;
     state->x = GRNG_ITER(state->x);
-
     #undef f
+    // ==============================================================
+    goto _phi; phi:
+    {
+        asm volatile("in_phi:");
+        _PHI(_param1, _param2, _param3);
+        // fprintf(stdout, "%d %d %d\n", _param1, _param2, _param3);
+        // fprintf(stdout, "rip: %d\n", _rip);
+        switch (_rip)
+        {
+            RET(0);RET(1);RET(2);RET(3);RET(4);RET(5);
+            default: assert(0);
+        }
+    }
+    _phi: asm("nop");
 }
 
 

@@ -9,7 +9,7 @@ RM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
 
 .PHONY: run clearobj cleardump asm build rebuild re
 
-all: rebuild run 
+all: build run 
 
 run: 
 	./PRNG

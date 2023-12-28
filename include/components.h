@@ -19,7 +19,7 @@ uint8_t *_f = NULL;
 enum _operations {add /*= 0*/, xor, rshitf, unarys};
 
 /*! @note a = a [b] c, where b is an operation */
-#define PHI(a, b, c) switch (TO_FOUR(b)) {             \
+#define _PHI(a, b, c) switch (TO_FOUR(b)) {             \
     case add: (a) += (c);                        break;\
     case xor: (a) ^= (c);                        break;\
     case rshitf: (a) = RSHIFT((a), TO_EIGHT(c)); break;\
@@ -27,6 +27,11 @@ enum _operations {add /*= 0*/, xor, rshitf, unarys};
     default:                                     break;\
 }
 
+#define _PARAM(x1, x2, x3) _param1 = x1; _param2 = x2; _param3 = x3
+#define _LABEL(n) ret##n
+#define _CALL(n) _rip = n; goto phi; _LABEL(n): asm("nop")
+#define PHI(x1 ,x2, x3) _PARAM(x1, x2, x3); _CALL(__COUNTER__); x1 = _param1
+#define RET(n) case n: goto ret##n
 // ==================================
 // definitions for iteration of state->x
 #define _P 1567 // prime
