@@ -60,12 +60,12 @@ int main()
     {
         byte = G(state);
         update(state);
-        // YIELD(byte);
+        YIELD(byte);
     }
     end_time = clock();
     puts("FIN");
 
-    printf("Time cost: %.6f seconds\n", ((double)(end_time - start_time)) / CLOCKS_PER_SEC);
+    printf("Time cost: %.0f milli seconds\n", ((double)(1000*(end_time - start_time))) / CLOCKS_PER_SEC);
     printf("Dumping state into %s...\n", DUMP_FILE);
     if(!dump(state, DUMP_FILE, sizeof(*state)))
         printf("Failed to dump into %s, maybe the route doesn't exist.\n", DUMP_FILE);
@@ -77,6 +77,7 @@ void inline update(state_t* state)
     #define f (state->f)
 
     uint8_t old = f[state->i];
+    uint8_t A = 0, B = 0;
 
     uint8_t register new = 0; // new value of f[i]
     uint8_t register i_new = 0; // new value of i
@@ -84,25 +85,25 @@ void inline update(state_t* state)
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
-    for (int cnt = 0; cnt < 22; cnt++)
+    // for (int cnt = 0; cnt < 22; cnt++)
     {
         PHI(a, b, c);
         PHI(b, c, f[a]);
         PHI(c, f[a], b);
     }
 
-    new = a;
+    new = c;
     new += state->x;
     new += (new == old);
 
     i_new = (state->i)^old;
-    PHI(i_new, a, (b^c)&0xfe); // mask out unarys:f
+    PHI(i_new, c, (a^b)&0xfe); // mask out unarys:f
 
-    uint8_t B = f[b], C = f[c];
-    PHI(B, a, c&0xfe);
-    PHI(C, a, b&0xfe);
-    f[b] = B;
-    f[c] = C;
+    A = f[a], B = f[b];
+    PHI(A, c, a&0xfe);
+    PHI(B, c, b&0xfe);
+    f[a] = B;
+    f[b] = A;
 
     f[state->i] = new;
     state->i = i_new;
