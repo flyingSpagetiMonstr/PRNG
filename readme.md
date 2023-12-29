@@ -16,17 +16,11 @@ For the test report, see `report\1000-test-finalAnalysisReport.txt`
 
 ---
 
-For details on how/why it works, see `explain.md` (in simplified Chinese)
+For details on how/why it works, see `explain.md` (in simplified Chinese) on branch `hide-i`, and refer to codes on `hide-i` too.
+
+As for codes in the default/current branch, mechannisms are almost same as `hide-i`, only same optimizations. Detailed changes and corresponding explanations can be found in log.md.
 
 ---
-
-There are three versions: 
-- on branch "hide-i"
-  - current version, developing, branched from last version of "master"
-- on branch "master"
-  - legacy version, generating byte by byte.
-- on branch "bit"
-  - legacy version, generating bit by bit, and the uniformity is not so good
 
 # Mannual
 0. compiling with  

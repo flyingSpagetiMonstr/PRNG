@@ -86,7 +86,7 @@ void static inline update(state_t* state)
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
-    // for (int cnt = 0; cnt < 3; cnt++)
+    // for (int cnt = 0; cnt < 22; cnt++)
     {
         PHI(a, b, c); 
         PHI(b, c, a); 
