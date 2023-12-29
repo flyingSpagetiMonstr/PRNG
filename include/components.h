@@ -4,19 +4,22 @@
 
 // ==================================
 // defines for funtion "PHI"
-// ... .. .
+// xx ... .. .
 #define TO_TWO(x) ((x)&0b1)
 #define TO_FOUR(x) (((x)>>1)&0b11)
 #define TO_EIGHT(x) (((x)>>3)&0b111)
+#define TO_XEIGHT(x) ((x)>>5)
+
 
 // cyclic rshift for uint8_t
 #define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
+#define LSHIFT(x, n) (((x)<<(n))^((x)>>(8-(n))))
 
 uint8_t *_f = NULL; 
 // _f will be initialized to be state->f.
 // Acts as a global variable, providing global accessibility to f.
 
-enum _operations {add /*= 0*/, xor, rshitf, unarys};
+enum _operations {add /*= 0*/, sub, rshitf, unarys};
 
 /*!
  * @note x = x [op] a, where op is an operation 
@@ -27,7 +30,9 @@ enum _operations {add /*= 0*/, xor, rshitf, unarys};
     case add: (x) += (a);                        \
     case unarys: (x) = TO_TWO(a)? _f[x]: ~(x);   \
     case rshitf: (x) = RSHIFT((x), TO_EIGHT(a)); \
-    case xor: (x) ^= (a);                        \
+    case sub: (x) -= (a);                        \
+    default /*lshift , xor*/:                    \
+    (x) = LSHIFT((x), TO_XEIGHT(a)); x ^= a;     \
 }
 
 

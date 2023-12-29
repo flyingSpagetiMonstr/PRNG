@@ -7,9 +7,11 @@ TARGET = $(if $(shell echo $$OS), PRNG.exe, PRNG) # OS-specific
 
 RM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
 
-.PHONY: run clearobj cleardump asm build rebuild re
+.PHONY: run clearobj cleardump asm build rebuild rerun
 
 all: build run 
+
+rerun: rebuild run
 
 run: 
 	./PRNG

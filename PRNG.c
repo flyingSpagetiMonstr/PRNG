@@ -13,7 +13,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
+#define STREAM_LEN (MILLION) // required stream length (by bit)
 
 #define DIE_HARDER
 #ifndef DIE_HARDER
@@ -77,8 +77,8 @@ void static inline update(state_t* state)
 {
     #define f (state->f)
 
-    uint8_t old = f[state->i];
-    uint8_t A = 0, B = 0, s = 0;
+    uint8_t register old = f[state->i];
+    uint8_t register A = 0, B = 0, s = 0;
 
     uint8_t register new = 0; // new value of f[i]
     uint8_t register i_new = 0; // new value of i
@@ -86,12 +86,11 @@ void static inline update(state_t* state)
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
-    // for (int cnt = 0; cnt < 22; cnt++)
-    {
-        PHI(a, b, c); 
-        PHI(b, c, a); 
-        PHI(c, a, b); 
-    }
+
+    PHI(a, b, c); 
+    PHI(b, c, a); 
+    PHI(c, a, b); 
+
     new = c;
     new += state->x;
     new += (new == old);
