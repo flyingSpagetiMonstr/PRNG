@@ -13,7 +13,7 @@
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
 #define MILLION (1000000) 
-#define STREAM_LEN (MILLION*100) // required stream length (by bit)
+#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
 
 #ifndef DIE_HARDER
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
@@ -77,7 +77,7 @@ void inline update(state_t* state)
     #define f (state->f)
 
     uint8_t old = f[state->i];
-    uint8_t A = 0, B = 0;
+    uint8_t A = 0, B = 0, s = 0;
 
     uint8_t register new = 0; // new value of f[i]
     uint8_t register i_new = 0; // new value of i
@@ -85,26 +85,27 @@ void inline update(state_t* state)
     uint8_t register a = state->i;
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
-    // for (int cnt = 0; cnt < 22; cnt++)
+    // for (int cnt = 0; cnt < 3; cnt++)
     {
-        PHI(a, b, c);
-        PHI(b, c, f[a]);
-        PHI(c, f[a], b);
+        PHI(a, b, c); 
+        PHI(b, c, a); 
+        PHI(c, a, b); 
     }
-
     new = c;
     new += state->x;
     new += (new == old);
 
+    s = f[c];
+
     i_new = (state->i)^old;
-    PHI(i_new, c, (a^b)&0xfe); // mask out unarys:f
+    PHI(i_new, s, a^b);
 
-    A = f[a], B = f[b];
-    PHI(A, c, a&0xfe);
-    PHI(B, c, b&0xfe);
-    f[a] = B;
-    f[b] = A;
+    A = f[a]; B = f[b]; 
+    PHI(A, s, b);
+    PHI(B, s, a);
 
+    // assigning new values: 
+    f[a] = B; f[b] = A;
     f[state->i] = new;
     state->i = i_new;
     state->x = GRNG_ITER(state->x);

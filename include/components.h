@@ -18,14 +18,18 @@ uint8_t *_f = NULL;
 
 enum _operations {add /*= 0*/, xor, rshitf, unarys};
 
-/*! @note a = a [b] c, where b is an operation */
-#define PHI(a, b, c) switch (TO_FOUR(b)) {             \
-    case add: (a) += (c);                        break;\
-    case xor: (a) ^= (c);                        break;\
-    case rshitf: (a) = RSHIFT((a), TO_EIGHT(c)); break;\
-    case unarys: (a) = TO_TWO(c)? _f[a]: ~(a);   break;\
-    default:                                     break;\
+/*!
+ * @note x = x [op] a, where op is an operation 
+ * @attention there is no "break;" in this switch, 
+ * and default is "nop"
+ */
+#define PHI(x, op, a) switch (TO_FOUR(op)) {     \
+    case add: (x) += (a);                        \
+    case unarys: (x) = TO_TWO(a)? _f[x]: ~(x);   \
+    case rshitf: (x) = RSHIFT((x), TO_EIGHT(a)); \
+    case xor: (x) ^= (a);                        \
 }
+
 
 // ==================================
 // definitions for iteration of state->x
