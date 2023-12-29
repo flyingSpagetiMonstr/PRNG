@@ -15,6 +15,7 @@
 #define MILLION (1000000) 
 #define STREAM_LEN (MILLION*1000) // required stream length (by bit)
 
+#define DIE_HARDER
 #ifndef DIE_HARDER
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
 #define CONDITION (cnt <= byte_n)
@@ -37,7 +38,7 @@ enum _init_method {
 };
 
 /*! @note mainly updates f[i] and i*/
-void inline update(state_t* state); 
+void static inline update(state_t* state); 
 
 void init_state(state_t *state, enum _init_method m);
 void peak(state_t *state, int stream_len);
@@ -72,7 +73,7 @@ int main()
     fclose(out_file);
 }
 
-void inline update(state_t* state)
+void static inline update(state_t* state)
 {
     #define f (state->f)
 
