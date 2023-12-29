@@ -1,3 +1,5 @@
+**12.28**
+
 no longer loops in 3*PHI
 
 f[a] changed to a
@@ -23,7 +25,9 @@ removing break;s in switch and rearranged the operations
 ```
 ---
 
-added default to PHI, in order to do more operations in one switch:
+**12.29**
+
+added default to PHI, in order to do more operations in one switch
 
 commands in default will always be executed
 

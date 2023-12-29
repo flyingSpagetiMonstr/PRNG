@@ -8,19 +8,25 @@
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 #include "dieharder.h"
 
-#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 #define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
 #define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
 
-#define MILLION (1000000) 
-#define STREAM_LEN (MILLION) // required stream length (by bit)
+#define MILLION 1000000
 
-#define DIE_HARDER
-#ifndef DIE_HARDER
+// ===================================================
+// frequently modified constants when testing: 
+#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
+#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
+#define DIE_HARDER 0
+// ===================================================
+
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
 #define CONDITION (cnt <= byte_n)
-#else
+
+#if DIE_HARDER
+#undef YIELD
 #define YIELD(byte) pass_to_dieharder(byte)
+#undef CONDITION
 #define CONDITION 1
 // "disable" printing to console:
 #define puts(x)
