@@ -1,7 +1,5 @@
 # PRNG
 
----
-
 A Pseudorandom Number Generator
 
 Not using any existing cryptographic algorithms or PRNGs
@@ -20,7 +18,10 @@ For details on how/why it works, see `explain.md` (in simplified Chinese) on bra
 
 As for codes in the default/current branch, mechannisms are almost same as `hide-i`, only same optimizations. Detailed changes and corresponding explanations can be found in log.md.
 
----
+# Speed and Randomness
+
+Still under develop/optimizing, able to generate one million bits in several milliseconds now, and still passing NIST and diehard tests.
+
 
 # Mannual
 0. compiling with  
