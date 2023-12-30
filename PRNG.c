@@ -17,7 +17,9 @@
 // frequently modified constants when testing: 
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 #define STREAM_LEN (MILLION*1000) // required stream length (by bit)
-#define DIE_HARDER 0
+#define DIE_HARDER 1
+#define STRENGTH ((uint8_t)7) // 3*7 + 2 = 23 | *9/16 =~ 13 f[]
+// enum small, -, big & how to let .sh 回显 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // ===================================================
 
 #define YIELD(byte) fwrite(&byte, 1, 1, out_file)
@@ -93,9 +95,12 @@ void static inline update(state_t* state)
     uint8_t register b = f[COMPRESS(a + state->x)];
     uint8_t register c = f[COMPRESS(state->x)];
 
-    PHI(a, b, c); 
-    PHI(b, c, a); 
-    PHI(c, a, b); 
+    for (uint8_t register i = 0; i < STRENGTH; i++)
+    {
+        PHI(a, b, c); 
+        PHI(b, c, a); 
+        PHI(c, a, b); 
+    }
 
     new = c;
     new += state->x;

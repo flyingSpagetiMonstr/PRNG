@@ -5,11 +5,12 @@
 // ==================================
 // defines for funtion "PHI"
 // xx ... .. .
-#define TO_TWO(x) ((x)&0b1)
-#define TO_FOUR(x) (((x)>>1)&0b11)
+// #define TO_TWO(x) ((x)&0b1)
+// #define TO_FOUR(x) (((x)>>1)&0b11)
+#define TO_FOUR(x) ((x)&0b11)
 #define TO_EIGHT(x) (((x)>>3)&0b111)
-#define TO_XEIGHT(x) ((x)>>5)
-
+#define TOXFOUR(x) ((x)>>4)
+#define TOXEIGHT(x) ((x)>>5)
 
 // cyclic rshift for uint8_t
 #define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
@@ -19,22 +20,22 @@ uint8_t *_f = NULL;
 // _f will be initialized to be state->f.
 // Acts as a global variable, providing global accessibility to f.
 
-enum _operations {add /*= 0*/, sub, rshitf, unarys};
+enum _operations {add /*= 0*/, xor, rshitf, unarys, lshift};
 
 /*!
  * @note x = x [op] a, where op is an operation 
  * @attention there is no "break;" in this switch, 
- * and default is "nop"
+ * and "case lshift" is out of range so will always be
+ * executed
  */
 #define PHI(x, op, a) switch (TO_FOUR(op)) {     \
     case add: (x) += (a);                        \
-    case unarys: (x) = TO_TWO(a)? _f[x]: ~(x);   \
     case rshitf: (x) = RSHIFT((x), TO_EIGHT(a)); \
-    case sub: (x) -= (a);                        \
-    default /*lshift , xor*/:                    \
-    (x) = LSHIFT((x), TO_XEIGHT(a)); x ^= a;     \
+    case unarys: (x) = TOXFOUR(a)? _f[x]: ~(x);  \
+    case xor: (x) ^= (a);                        \
+    case lshift: (x) = LSHIFT((x), TOXEIGHT(a)); \
 }
-
+// P(f[] is used) = 9/16
 
 // ==================================
 // definitions for iteration of state->x

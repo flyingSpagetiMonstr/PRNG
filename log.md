@@ -1,4 +1,4 @@
-**12.28**
+**12.28** day
 
 no longer loops in 3*PHI
 
@@ -25,7 +25,7 @@ removing break;s in switch and rearranged the operations
 ```
 ---
 
-**12.29**
+**12.29** day
 
 added default to PHI, in order to do more operations in one switch
 
@@ -43,3 +43,10 @@ commands in default will always be executed
 ```
 
 ---
+
+**12.29** night
+
+going to run TestU01 BigCrush...
+
+---
+
