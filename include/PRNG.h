@@ -1,20 +1,13 @@
 #ifndef INCLUDE_PRNG_H
 #define INCLUDE_PRNG_H
 
-// ==================================
 #include <stdint.h>
-// 2^N = LEN
-#define N 8
-#define LEN 256
-#define END ((LEN)-1)
+// ==================================
+uint8_t generator(void);
 
-// state = {f[], x, i}
-typedef struct _state_t
-{
-    uint8_t f[LEN];
-    uint16_t x;
-    uint8_t i;
-} state_t;
-
+void default_state(void);
+void rand_state(void);
+int load_state(char *filename);
+int dump_state(char *filename);
 // ==================================
 #endif // INCLUDE_PRNG_H

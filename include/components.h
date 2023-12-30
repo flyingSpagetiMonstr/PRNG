@@ -1,6 +1,6 @@
 #ifndef INCLUDE_COMPONENTS_H
 #define INCLUDE_COMPONENTS_H
-#include "PRNG.h"
+#include "PRNG-basics.h"
 
 // ==================================
 // defines for funtion "PHI"
@@ -16,7 +16,6 @@
 #define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
 #define LSHIFT(x, n) (((x)<<(n))^((x)>>(8-(n))))
 
-uint8_t *_f = NULL; 
 // _f will be initialized to be state->f.
 // Acts as a global variable, providing global accessibility to f.
 
@@ -31,7 +30,7 @@ enum _operations {add /*= 0*/, xor, rshitf, unarys, lshift};
 #define PHI(x, op, a) switch (TO_FOUR(op)) {     \
     case add: (x) += (a);                        \
     case rshitf: (x) = RSHIFT((x), TO_EIGHT(a)); \
-    case unarys: (x) = TOXFOUR(a)? _f[x]: ~(x);  \
+    case unarys: (x) = TOXFOUR(a)? state->f[x]: ~(x);  \
     case xor: (x) ^= (a);                        \
     case lshift: (x) = LSHIFT((x), TOXEIGHT(a)); \
 }

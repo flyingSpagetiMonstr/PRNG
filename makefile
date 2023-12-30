@@ -1,52 +1,63 @@
 CC = gcc -O1
 FLAGS = -I include/
 
-HEADERS = include/PRNG.h include/dump.h  include/components.h include/dieharder.h
-OBJS = objs/PRNG.o objs/dump.o objs/dieharder.o
-TARGET = $(if $(shell echo $$OS), PRNG.exe, PRNG) # OS-specific 
+OBJS = objs/dump.o objs/PRNG.o
 
-RM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
+MAIN = $(if $(shell echo $$OS), main.exe, main) # OS-specific 
+RRM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
+RM = $(if $(shell echo $$OS), del, rm -f) # OS-specific command
 
-.PHONY: run clearobj cleardump asm build rebuild rerun
+.PHONY: clearobj cleardump 	\
+	do run rerun 			\
+	asm pre lib  
 
-all: build run 
 
-rerun: rebuild run
+# =============================
+do: $(MAIN) run 
+
+rerun: clean do
 
 run: 
-	./PRNG
+	./main
 
-build: $(TARGET)
-
-rebuild: clean build
-
+# =============================
 clean: clearobj
-	$(RM) $(TARGET)
+	$(RM) .\bin\libprng.a  
+	$(RM) $(MAIN)
 
 clearobj:
 ifeq ($(OS), Windows_NT)  # Check for Windows
-	$(RM) *.o
+	$(RRM) *.o
 else
-	$(RM) objs/*.o
+	$(RRM) objs/*.o
 endif
+# =============================
+lib: pre bin/libprng.a
+
+pre: 
+	@ if not exist bin mkdir bin
+	@ if not exist objs mkdir objs
+
+# =============================
 
 cleardump: 
-	$(RM) .\dumps\stream_len.dat
-	$(RM) .\dumps\state.dat
+	$(RRM) .\dumps\stream_len.dat
+	$(RRM) .\dumps\state.dat
 
 asm: PRNG.asm
 
-$(TARGET): $(OBJS) 
-	$(CC) -o $@ $(OBJS)
-
-objs/PRNG.o: PRNG.c $(HEADERS)
+# =====================================================
+objs/PRNG.o: PRNG.c include/PRNG-basics.h include/PRNG.h
 	$(CC) $(FLAGS) -c -o $@ $<
 
-objs/dump.o: libs/dump.c include/dump.h include/PRNG.h 
+objs/dump.o: libs/dump.c include/dump.h include/PRNG-basics.h 
 	$(CC) $(FLAGS) -c -o $@ $<
 
-objs/dieharder.o: libs/dieharder.c include/dieharder.h include/PRNG.h 
-	$(CC) $(FLAGS) -c -o $@ $<
-
-PRNG.asm: PRNG.c $(HEADERS) 
+PRNG.asm: PRNG.c $(HEADERS)
 	$(CC) $(FLAGS) -S -o $@ $<
+
+bin/libprng.a: $(OBJS)
+	ar rcs $@ $(OBJS)
+# =====================================================
+$(MAIN): main.c include/PRNG.h bin/libprng.a 
+	$(CC) $(FLAGS) -o $@ $< -L./bin -lprng

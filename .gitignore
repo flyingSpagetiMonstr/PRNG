@@ -6,7 +6,8 @@ Q.md
 sts-2.1.2
 others/
 objs/
-dumps*/
+dumps/
+bin/
 .vscode
 
 measure.ps1

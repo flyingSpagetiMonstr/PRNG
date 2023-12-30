@@ -1,99 +1,39 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "PRNG.h"
+#include "PRNG-basics.h"
 #include "components.h"
 #include "dump.h" // for storing the ending state and reload from it later when the program restarts.
-#include "dieharder.h"
 
-#define DUMP_FILE "dumps/state.dat" // where the data of ending state will be dumped into
-#define INFO "dumps/stream_len.dat" // where the infomation of stream_len will be stored
-
-#define MILLION 1000000
-
-// ===================================================
-// frequently modified constants when testing: 
-#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
-#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
-#define DIE_HARDER 1
 #define STRENGTH ((uint8_t)7) // 3*7 + 2 = 23 | *9/16 =~ 13 f[]
-// enum small, -, big & how to let .sh 回显 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// ===================================================
-
-#define YIELD(byte) fwrite(&byte, 1, 1, out_file)
-#define CONDITION (cnt <= byte_n)
-
-#if DIE_HARDER
-#undef YIELD
-#define YIELD(byte) pass_to_dieharder(byte)
-#undef CONDITION
-#define CONDITION 1
-// "disable" printing to console:
-#define puts(x)
-#define printf(...)
-#endif
-
 #define G(s) (s->f[s->i])
 
-// ==================================
-// three methods to init state
-enum _init_method {
-    default_state, // = 0
-    rand_state,
-    load_state
-};
+// mainly updates f[i] and i
+static inline void update(void); 
 
-/*! @note mainly updates f[i] and i*/
-void static inline update(state_t* state); 
-
-void init_state(state_t *state, enum _init_method m);
-void peak(state_t *state, int stream_len);
-
-int main()
+// =========================================================
+static state_t _s = {0}, *state = &_s;
+uint8_t generator(void)
 {
-    uint8_t byte = 0; 
-    uint32_t cnt = 0, byte_n = STREAM_LEN/8; // generating one byte per round
-    state_t _s = {0}, *state = &_s;
-    clock_t start_time = 0 , end_time = 0;
-    FILE *out_file = fopen(OUTPUT, "wb");
-
-    _f = state->f;
-    
-    init_state(state, load_state);
-
-    puts("Generating...");
-    start_time = clock();
-    for (cnt = 1; CONDITION; cnt++)
-    {
-        byte = G(state);
-        update(state);
-        YIELD(byte);
-    }
-    end_time = clock();
-    puts("FIN");
-
-    printf("Time cost: %.0f milli seconds\n", ((double)(1000*(end_time - start_time))) / CLOCKS_PER_SEC);
-    printf("Dumping state into %s...\n", DUMP_FILE);
-    if(!dump(state, DUMP_FILE, sizeof(*state)))
-        printf("Failed to dump into %s, maybe the route doesn't exist.\n", DUMP_FILE);
-    fclose(out_file);
+    update();
+    return G(state);
 }
+// =========================================================
 
-void static inline update(state_t* state)
+static inline void update(void)
 {
-    #define f (state->f)
+    #define F (state->f)
 
-    uint8_t register old = f[state->i];
+    uint8_t register old = F[state->i];
     uint8_t register A = 0, B = 0, s = 0;
 
     uint8_t register new = 0; // new value of f[i]
     uint8_t register i_new = 0; // new value of i
 
     uint8_t register a = state->i;
-    uint8_t register b = f[COMPRESS(a + state->x)];
-    uint8_t register c = f[COMPRESS(state->x)];
+    uint8_t register b = F[COMPRESS(a + state->x)];
+    uint8_t register c = F[COMPRESS(state->x)];
 
     for (uint8_t register i = 0; i < STRENGTH; i++)
     {
@@ -106,85 +46,77 @@ void static inline update(state_t* state)
     new += state->x;
     new += (new == old);
 
-    s = f[c];
+    s = F[c];
 
     i_new = (state->i)^old;
     PHI(i_new, s, a^b);
 
-    A = f[a]; B = f[b]; 
+    A = F[a]; B = F[b]; 
     PHI(A, s, b);
     PHI(B, s, a);
 
     // assigning new values: 
-    f[a] = B; f[b] = A;
-    f[state->i] = new;
+    F[a] = B; F[b] = A;
+    F[state->i] = new;
     state->i = i_new;
     state->x = GRNG_ITER(state->x);
 
-    #undef f
+    #undef F
 }
 
 
-void init_state(state_t *state, enum _init_method m)
-{
-    int stream_len = 0; 
-    // stream_len records the accumulated bit length generated since
-    // last reset of state (i.e. initializing from default_state or rand_state) 
+// =========================================================
 
-    // default_state:
+// init state as "default state" 
+void default_state(void)
+{
     state->x = 1;
     state->i = END/4;
     for (int i = 0; i < LEN; i++)
     {
         state->f[i] = (uint8_t)(END-1-i);
     }
-
-    switch (m)
-    {
-    case default_state:
-        // doing nothing, since already initialized above 
-        break;
-
-    case rand_state:
-        // use c rand() to initialize state
-        puts("Seeding state...");
-        srand(time(0));
-        for (int i = 0; i < LEN; i++)
-        {
-            state->f[i] = (uint8_t)rand();
-        }
-        state->i = (uint8_t)rand();
-        state->x = (uint16_t)rand();
-        state->x = BOUND(state->x);
-        break;
-
-    case load_state:
-        // load state from previous dumped state
-        printf("Loading state from %s...\n", DUMP_FILE);
-        if(!load(state, DUMP_FILE, sizeof(*state)))
-            printf("Failed to load from %s, maybe the route doesn't exist.\n", DUMP_FILE);
-        if(!load(&stream_len, INFO, sizeof(stream_len)))
-            printf("Failed to load from %s, maybe the route doesn't exist.\n", INFO);;
-        state->x = BOUND(state->x);
-        // if nothing to load or load error (error in file operation),
-        // behavior would be same as default_state
-        break;
-
-    default:
-        puts("No such option, initializing by default_state");
-        break;
-    }
-    stream_len += STREAM_LEN; // update stream_len
-
-    // peak(state, stream_len); exit(0);
-    if (!dump(&stream_len, INFO, sizeof(stream_len))) // store stream_len into file
-        printf("Failed to dump into %s, maybe the route doesn't exist.\n", INFO);
 }
 
-void peak(state_t *state, int stream_len)
+// use c rand() to initialize state
+void rand_state(void)
 {
-    printf("f[0]: 0x%x\n", state->f[0]);
-    printf("x: %d\n", state->x);
-    printf("i: %d\n", state->i);
-    printf("stream_len: %d\n", stream_len);
+    srand(time(0));
+    for (int i = 0; i < LEN; i++)
+    {
+        state->f[i] = (uint8_t)rand();
+    }
+    state->i = (uint8_t)rand();
+    state->x = (uint16_t)rand();
+    state->x = BOUND(state->x);
 }
+
+/*!
+ * load state from data in file,
+ * return 1 on success and 0 when fail
+ * @attention if an error occurred in loading (mostly error in file operation), 
+ * state will be set to "default state"
+ */
+int load_state(char *filename)
+{
+    int success = 0;
+    default_state();
+    success = load(state, filename, sizeof(*state));
+    state->x = BOUND(state->x);
+    return success;
+}
+
+// dumps state into the given file, return 1 on success and 0 when fail
+int dump_state(char *filename)
+{
+    return dump(state, filename, sizeof(*state));
+}
+
+// void peak(state_t *state, int stream_len);
+// void peak(state_t *state, int stream_len)
+// {
+//     printf("f[0]: 0x%x\n", state->f[0]);
+//     printf("x: %d\n", state->x);
+//     printf("i: %d\n", state->i);
+//     printf("stream_len: %d\n", stream_len);
+// }
