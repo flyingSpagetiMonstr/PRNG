@@ -20,7 +20,7 @@ As for codes in the default/current branch, mechannisms are almost same as `hide
 
 # Speed and Randomness
 
-Still under develop/optimizing, able to generate one million bits in several milliseconds now, and still passing NIST and diehard tests.
+Still under develop/optimizing, able to generate one million bits in several milliseconds now, and still passing NIST and dieharder tests.
 
 
 # Mannual
