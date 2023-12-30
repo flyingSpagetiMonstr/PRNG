@@ -2,18 +2,36 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "PRNG-basics.h"
 #include "components.h"
-#include "dump.h" // for storing the ending state and reload from it later when the program restarts.
 
+// for storing state when program ends, and reload from it later when the generator is restarted.
+#include "dump.h" 
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #define STRENGTH ((uint8_t)7) // 3*7 + 2 = 23 | *9/16 =~ 13 f[]
+
+// =============================
+// 2^N = LEN
+#define N 8
+#define LEN 256
+#define END ((LEN)-1)
+
+// state = {f[], x, i}
+typedef struct _state_t
+{
+    uint8_t f[LEN];
+    uint16_t x;
+    uint8_t i;
+} state_t;
+
 #define G(s) (s->f[s->i])
+// =============================
 
 // mainly updates f[i] and i
 static inline void update(void); 
-
 // =========================================================
-static state_t _s = {0}, *state = &_s;
+
+static state_t _s = {.x = 1}, *state = &_s;
 uint8_t generator(void)
 {
     update();

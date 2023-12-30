@@ -47,10 +47,10 @@ cleardump:
 asm: PRNG.asm
 
 # =====================================================
-objs/PRNG.o: PRNG.c include/PRNG-basics.h include/PRNG.h
+objs/PRNG.o: PRNG.c include/PRNG.h
 	$(CC) $(FLAGS) -c -o $@ $<
 
-objs/dump.o: libs/dump.c include/dump.h include/PRNG-basics.h 
+objs/dump.o: libs/dump.c include/dump.h
 	$(CC) $(FLAGS) -c -o $@ $<
 
 PRNG.asm: PRNG.c $(HEADERS)

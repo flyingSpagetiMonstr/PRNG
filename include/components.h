@@ -1,6 +1,6 @@
 #ifndef INCLUDE_COMPONENTS_H
 #define INCLUDE_COMPONENTS_H
-#include "PRNG-basics.h"
+
 
 // ==================================
 // defines for funtion "PHI"

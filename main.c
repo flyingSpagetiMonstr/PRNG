@@ -11,9 +11,8 @@
 // ===================================================
 // frequently modified constants when testing: 
 #define STREAM_LEN (MILLION) // required stream length (by bit)
-#define CONDITION (cnt <= byte_n)
-#define TIME 0
-#define PASS_TO_STDOUT
+#define TIME 1 // whether to calculate the time cost
+// #define PASS_TO_STDOUT
 // enum small, -, big & how to let .sh echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // ===================================================
 
@@ -40,7 +39,7 @@ int main()
 
     if(TIME) start_time = clock();
     // =======================================
-    for (cnt = 1; CONDITION; cnt++)
+    for (cnt = 1; cnt <= byte_n; cnt++)
     {
         byte = generator();
         if(!TIME) YIELD(byte);

@@ -15,7 +15,6 @@ int dump(void* x, char* filename, int len)
    else
    {
         return 0;
-        // printf("Failed to dump into %s, maybe the route doesn't exist.\n", filename);
    }
 }
 
@@ -31,6 +30,5 @@ int load(void* x, char* filename, int len)
     else
     {
         return 0;
-        // printf("Failed to load from %s, maybe the route doesn't exist.\n", filename);
     }
 }
