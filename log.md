@@ -50,3 +50,10 @@ going to run TestU01 BigCrush...
 
 ---
 
+**12.30** day
+
+encapsuled, re-structured
+
+running by compiling to libprng.a to be linked.
+
+---
