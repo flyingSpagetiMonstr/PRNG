@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 // ==================================
-uint8_t generator(void);
+uint32_t generator(void);
 
 void default_state(void);
 void rand_state(void);

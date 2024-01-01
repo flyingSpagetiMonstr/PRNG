@@ -1,7 +1,8 @@
-CC = gcc -O1
+CC = gcc -O3
 FLAGS = -I include/
 
 OBJS = objs/dump.o objs/PRNG.o
+LIBNAME = mini
 
 MAIN = $(if $(shell echo $$OS), main.exe, main) # OS-specific 
 RRM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command
@@ -22,7 +23,7 @@ run:
 
 # =============================
 clean: clearobj
-	$(RM) .\bin\libprng.a  
+	$(RM) .\bin\lib$(LIBNAME).a  
 	$(RM) $(MAIN)
 
 clearobj:
@@ -32,7 +33,7 @@ else
 	$(RRM) objs/*.o
 endif
 # =============================
-lib: pre bin/libprng.a
+lib: pre bin/lib$(LIBNAME).a
 
 pre: 
 ifeq ($(OS), Windows_NT)  # Check for Windows
@@ -60,8 +61,8 @@ objs/dump.o: libs/dump.c include/dump.h
 PRNG.asm: PRNG.c $(HEADERS)
 	$(CC) $(FLAGS) -S -o $@ $<
 
-bin/libprng.a: $(OBJS)
+bin/lib$(LIBNAME).a: $(OBJS)
 	ar rcs $@ $(OBJS)
 # =====================================================
-$(MAIN): main.c include/PRNG.h bin/libprng.a 
-	$(CC) $(FLAGS) -o $@ $< -L./bin -lprng
+$(MAIN): main.c include/PRNG.h bin/lib$(LIBNAME).a
+	$(CC) $(FLAGS) -o $@ $< -L./bin -l$(LIBNAME)

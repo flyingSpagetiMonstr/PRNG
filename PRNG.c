@@ -6,36 +6,29 @@
 
 #include "PRNG.h" 
 #include "components.h"
-
 // for storing state when program ends, and reload from it later when the generator is restarted.
 #include "dump.h" 
 
 enum _strengths strength = NIST;
 
-// =============================
-// 2^N = LEN
-#define N 8
-#define LEN 256
-#define END ((LEN)-1)
-
-// state = {f[], x, i}
 typedef struct _state_t
 {
-    uint8_t f[LEN];
-    uint16_t x;
-    uint8_t i;
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
 } state_t;
 
-#define CONFINE(x) ((uint8_t)(x))
-#define G(s) (s->f[s->i])
-// =============================
+#define G(state) (state->x ^ state->y ^ state->z)
 
-// mainly updates f[i] and i
 static inline void update(void); 
+static inline uint32_t phi(uint32_t a, uint32_t b, uint32_t c);
+static inline uint8_t state_f(uint8_t i);
 // =========================================================
 
-static state_t _s = {.x = 1}, *state = &_s;
-uint8_t generator(void)
+static state_t 
+_s = {0xAABBCCDD, 0xBBCCDDEE, 0xCCDDEEFF}, *state = &_s;
+
+uint32_t generator(void)
 {
     update();
     return G(state);
@@ -44,28 +37,34 @@ uint8_t generator(void)
 
 static inline void update(void)
 {
-    #define F (state->f)
+    uint32_t register 
+    a = state->x, b = state->y, c = state->z;
+    
+    for (int cnt = 0; cnt < 10; cnt++)
+    {
+        a = phi(a, b, c);
+        b = phi(b, c, a);
+        c = phi(c, a, b);
+    }
+    state->x = a; state->y = b; state->z = c;
+}
 
-    uint8_t old = F[state->i], new = old;  // old and new values of f[i]
-    uint8_t x = 0, y = 0;
+static inline uint32_t _phi(uint32_t a, uint32_t b, uint32_t c)
+{
+    if (TO_02(b))
+        a += c, a = RSHIFT(a, TO_32(c));
 
-    uint8_t register a = state->i;
-    uint8_t register b = F[CONFINE(state->x)];
-    uint8_t register c = F[CONFINE(a + state->x)];
-    uint16_t register cnt = 0;
-    for (cnt = 0; cnt < strength; cnt++)
-        PHI(a, b, c);
-    state->i ^= old^c;
+    a ^= state_f(TO_X32(c)) << TO_30(b);
+    a += 1;
+    return a;
+}
 
-    PHI(a, b, c); x = c;
-    PHI(a, b, c); y = c;
-    PHI(a, b, c); new ^= c;
-
-    F[x] ^= y;
-    F[state->i] = new ^ state->x;
-
-    state->x = GRNG_ITER(state->x);
-    #undef F
+// i: [0, 32)
+static inline uint8_t state_f(uint8_t i)
+{
+    return ((state->x >> i) & (0b1)) << 2
+        ^ ((state->y >> i) & (0b1)) << 1
+        ^ ((state->z >> i) & (0b1)) << 0;
 }
 
 
@@ -74,25 +73,19 @@ static inline void update(void)
 // init state as "default state" 
 void default_state(void)
 {
-    state->x = 1;
-    state->i = END/4;
-    for (int i = 0; i < LEN; i++)
-    {
-        state->f[i] = (uint8_t)(END-1-i);
-    }
+    state->x = 0xAABBCCDD;
+    state->y = 0xBBCCDDEE; 
+    state->z = 0xCCDDEEFF;
+    return;
 }
 
 // use c rand() to initialize state
 void rand_state(void)
 {
     srand(time(0));
-    for (int i = 0; i < LEN; i++)
-    {
-        state->f[i] = (uint8_t)rand();
-    }
-    state->i = (uint8_t)rand();
-    state->x = (uint16_t)rand();
-    state->x = BOUND(state->x);
+    state->x = (uint32_t)rand();
+    state->y = (uint32_t)rand();
+    state->z = (uint32_t)rand();
 }
 
 /*!
@@ -106,7 +99,6 @@ int load_state(char *filename)
     int success = 0;
     default_state();
     success = load(state, filename, sizeof(*state));
-    state->x = BOUND(state->x);
     return success;
 }
 
@@ -115,12 +107,3 @@ int dump_state(char *filename)
 {
     return dump(state, filename, sizeof(*state));
 }
-
-// void peak(state_t *state, int stream_len);
-// void peak(state_t *state, int stream_len)
-// {
-//     printf("f[0]: 0x%x\n", state->f[0]);
-//     printf("x: %d\n", state->x);
-//     printf("i: %d\n", state->i);
-//     printf("stream_len: %d\n", stream_len);
-// }
