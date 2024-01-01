@@ -1,4 +1,4 @@
-**12.28** day
+**12.28** 
 
 no longer loops in 3*PHI
 
@@ -25,7 +25,7 @@ removing break;s in switch and rearranged the operations
 ```
 ---
 
-**12.29** day
+**12.29** 
 
 added default to PHI, in order to do more operations in one switch
 
@@ -44,16 +44,26 @@ commands in default will always be executed
 
 ---
 
-**12.29** night
-
-going to run TestU01 BigCrush...
-
----
-
-**12.30** day
+**12.30** 
 
 encapsuled, re-structured
 
 running by compiling to libprng.a to be linked.
+
+---
+
+**12.31** 
+
+Running TestU01 Crush 
+
+and testing for miminum "strength" to pass NIST tests 
+
+---
+
+**1.1** 
+
+Passed TestU01 Crush
+
+Runing BigCrush
 
 ---

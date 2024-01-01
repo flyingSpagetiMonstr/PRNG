@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define PRNG_C
+
+#include "PRNG.h" 
 #include "components.h"
 
 // for storing state when program ends, and reload from it later when the generator is restarted.
 #include "dump.h" 
 
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#define STRENGTH ((uint8_t)7) // 3*7 + 2 = 23 | *9/16 =~ 13 f[]
+enum _strengths strength = NIST;
 
 // =============================
 // 2^N = LEN
@@ -24,6 +26,7 @@ typedef struct _state_t
     uint8_t i;
 } state_t;
 
+#define CONFINE(x) ((uint8_t)(x))
 #define G(s) (s->f[s->i])
 // =============================
 
@@ -43,42 +46,25 @@ static inline void update(void)
 {
     #define F (state->f)
 
-    uint8_t register old = F[state->i];
-    uint8_t register A = 0, B = 0, s = 0;
-
-    uint8_t register new = 0; // new value of f[i]
-    uint8_t register i_new = 0; // new value of i
+    uint8_t old = F[state->i], new = old;  // old and new values of f[i]
+    uint8_t x = 0, y = 0;
 
     uint8_t register a = state->i;
-    uint8_t register b = F[COMPRESS(a + state->x)];
-    uint8_t register c = F[COMPRESS(state->x)];
+    uint8_t register b = F[CONFINE(state->x)];
+    uint8_t register c = F[CONFINE(a + state->x)];
+    uint16_t register cnt = 0;
+    for (cnt = 0; cnt < strength; cnt++)
+        PHI(a, b, c);
+    state->i ^= old^c;
 
-    for (uint8_t register i = 0; i < STRENGTH; i++)
-    {
-        PHI(a, b, c); 
-        PHI(b, c, a); 
-        PHI(c, a, b); 
-    }
+    PHI(a, b, c); x = c;
+    PHI(a, b, c); y = c;
+    PHI(a, b, c); new ^= c;
 
-    new = c;
-    new += state->x;
-    new += (new == old);
+    F[x] ^= y;
+    F[state->i] = new ^ state->x;
 
-    s = F[c];
-
-    i_new = (state->i)^old;
-    PHI(i_new, s, a^b);
-
-    A = F[a]; B = F[b]; 
-    PHI(A, s, b);
-    PHI(B, s, a);
-
-    // assigning new values: 
-    F[a] = B; F[b] = A;
-    F[state->i] = new;
-    state->i = i_new;
     state->x = GRNG_ITER(state->x);
-
     #undef F
 }
 

@@ -35,9 +35,13 @@ endif
 lib: pre bin/libprng.a
 
 pre: 
+ifeq ($(OS), Windows_NT)  # Check for Windows
 	@ if not exist bin mkdir bin
 	@ if not exist objs mkdir objs
-
+else
+	@ mkdir -p bin
+	@ mkdir -p objs
+endif
 # =============================
 
 cleardump: 
@@ -47,7 +51,7 @@ cleardump:
 asm: PRNG.asm
 
 # =====================================================
-objs/PRNG.o: PRNG.c include/PRNG.h
+objs/PRNG.o: PRNG.c include/PRNG.h include/components.h include/dump.h 
 	$(CC) $(FLAGS) -c -o $@ $<
 
 objs/dump.o: libs/dump.c include/dump.h

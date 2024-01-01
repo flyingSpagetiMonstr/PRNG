@@ -21,11 +21,12 @@ int dump(void* x, char* filename, int len)
 int load(void* x, char* filename, int len)
 {
     FILE* src = fopen(filename, "rb");
+    int success = 0;
     if (src != NULL)
     {
-        fread(x, len, 1, src);
+        success = (fread(x, len, 1, src) == 1);
         fclose(src);
-        return 1;
+        return success;
     }
     else
     {

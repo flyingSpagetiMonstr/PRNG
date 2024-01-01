@@ -1,40 +1,47 @@
 #ifndef INCLUDE_COMPONENTS_H
 #define INCLUDE_COMPONENTS_H
 
-
 // ==================================
 // defines for funtion "PHI"
-// xx ... .. .
-// #define TO_TWO(x) ((x)&0b1)
-// #define TO_FOUR(x) (((x)>>1)&0b11)
-#define TO_FOUR(x) ((x)&0b11)
-#define TO_EIGHT(x) (((x)>>3)&0b111)
-#define TOXFOUR(x) ((x)>>4)
-#define TOXEIGHT(x) ((x)>>5)
+#define TO_L_FOUR(x) ((x)&0b11)
+#define TO_L_EIGHT(x) ((x)&0b111)
+#define TO_H_EIGHT(x) ((x)>>5)
+#define TO_M_EIGHT(x) (((x)>>2)&0b111)
 
 // cyclic rshift for uint8_t
 #define RSHIFT(x, n) (((x)>>(n))^((x)<<(8-(n))))
 #define LSHIFT(x, n) (((x)<<(n))^((x)>>(8-(n))))
 
-// _f will be initialized to be state->f.
-// Acts as a global variable, providing global accessibility to f.
+// enum _operations {
+//     add, rshift,
+//     and, mul,
+//     xor, lshift,
+//     or, not
+// };
 
-enum _operations {add /*= 0*/, xor, rshitf, unarys, lshift};
+enum _operations {_NOT, _ADD, _RSHIFT, _XOR};
 
 /*!
- * @note x = x [op] a, where op is an operation 
- * @attention there is no "break;" in this switch, 
- * and "case lshift" is out of range so will always be
- * executed
+ * @attention there is no "break;" in this switch
  */
-#define PHI(x, op, a) switch (TO_FOUR(op)) {     \
-    case add: (x) += (a);                        \
-    case rshitf: (x) = RSHIFT((x), TO_EIGHT(a)); \
-    case unarys: (x) = TOXFOUR(a)? state->f[x]: ~(x);  \
-    case xor: (x) ^= (a);                        \
-    case lshift: (x) = LSHIFT((x), TOXEIGHT(a)); \
+#define _PHI(a, b, c)  switch (TO_L_FOUR(b)) {    \
+    case _NOT: (a) = ~(a);                        \
+    case _ADD: (a) += (c);                        \
+    case _RSHIFT: (a) = RSHIFT(a, TO_M_EIGHT(c)); \
+    case _XOR: (a) ^= state->f[c];                \
 }
-// P(f[] is used) = 9/16
+
+// case and: (a) &= (c);                                         \ 
+// case mul: (a) *= (c + (c == 0));                              \ 
+// case or: (a) |= (c); a += state->x;                           \ 
+// case rshift: (a) = RSHIFT(a, TO_M_EIGHT(c));                  \ 
+// sub, or+and (?)
+
+#define PHI(a ,b, c) { \
+    _PHI(a, b, c);     \
+    _PHI(b, c, a);     \
+    _PHI(c, a, b);     \
+}
 
 // ==================================
 // definitions for iteration of state->x
@@ -42,8 +49,6 @@ enum _operations {add /*= 0*/, xor, rshitf, unarys, lshift};
 #define _G 1565 // maximum primitive root
 #define _G_MULT(x) (((x)*_G)%_P)
 #define GRNG_ITER(x) (_G_MULT(x))
-#define COMPRESS(x) ((uint8_t)(x))
 #define BOUND(x) ((x)%(_P-1)+1) // convert x to 1 ~ P-1
-
 
 #endif // INCLUDE_COMPONENTS_H

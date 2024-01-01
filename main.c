@@ -6,14 +6,13 @@
 
 #define MILLION 1000000
 #define DUMP_FILE "dumps/state.dat" // where the generated bits will be stored
-#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 
 // ===================================================
-// frequently modified constants when testing: 
-#define STREAM_LEN (MILLION) // required stream length (by bit)
+// options:
+#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
+#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
 #define TIME 1 // whether to calculate the time cost
 // #define PASS_TO_STDOUT
-// enum small, -, big & how to let .sh echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // ===================================================
 
 #ifdef PASS_TO_STDOUT
@@ -33,7 +32,10 @@ int main()
     FILE *out_file = NULL;
 
     out_file = fopen(OUTPUT, "wb");
+
     if (!load_state(DUMP_FILE)) printf("Failed to load from %s\n", DUMP_FILE);
+    strength = NIST;
+    printf("Config info: \n 1.load_state from: %s\n 2.strength: %d\n", DUMP_FILE, strength);
 
     puts("Running...");
 
@@ -42,7 +44,7 @@ int main()
     for (cnt = 1; cnt <= byte_n; cnt++)
     {
         byte = generator();
-        if(!TIME) YIELD(byte);
+        YIELD(byte);
     }
     // =======================================
     if(TIME) end_time = clock();
