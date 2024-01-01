@@ -66,4 +66,8 @@ Passed TestU01 Crush
 
 Runing BigCrush
 
+branch `mini`:
+
+complex enough relationship & extracting enough infomation 
+
 ---

@@ -1,3 +1,5 @@
+// #include <stdio.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
@@ -37,36 +39,56 @@ uint32_t generator(void)
 
 static inline void update(void)
 {
+    // uint32_t check[3] = {state->x, state->y, state->z};
+
     uint32_t register 
-    a = state->x, b = state->y, c = state->z;
+    a = state->x ^ state->y ^ state->z,
+    b = state_f(a - 1),
+    c = state_f(a + 1);
     
-    for (int cnt = 0; cnt < 10; cnt++)
+    for (int cnt = 0; cnt < strength; cnt++)
     {
         a = phi(a, b, c);
         b = phi(b, c, a);
         c = phi(c, a, b);
     }
     state->x = a; state->y = b; state->z = c;
+
+    // if (state->x == check[0] && state->y == check[1] && state->z == check[2])
+    // {
+    //     puts("!!!!");
+    //     for (int i = 0; i < 3; i++)
+    //     {
+    //         printf("xxx: %08X\n", check[i]);
+    //     }
+    //     exit(0);
+    // }
+
+    // 32
+    // 3 * 32
+
+    // 3 * 3 = 9
+    // min: 36bit (?)
 }
 
-static inline uint32_t _phi(uint32_t a, uint32_t b, uint32_t c)
+static inline uint32_t phi(uint32_t a, uint32_t b, uint32_t c)
 {
     if (TO_02(b))
-        a += c, a = RSHIFT(a, TO_32(c));
+        a ^= c, a = RSHIFT(a, TO_X32(b));
 
-    a ^= state_f(TO_X32(c)) << TO_30(b);
+    a += state_f(TO_32(c)) << TO_03(b);
     a += 1;
     return a;
 }
 
-// i: [0, 32)
+//! \param i: [0, 32)
+//! \returns `f[i]`: [0, 8)
 static inline uint8_t state_f(uint8_t i)
 {
     return ((state->x >> i) & (0b1)) << 2
         ^ ((state->y >> i) & (0b1)) << 1
         ^ ((state->z >> i) & (0b1)) << 0;
 }
-
 
 // =========================================================
 

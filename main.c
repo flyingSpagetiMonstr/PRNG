@@ -4,14 +4,14 @@
 
 #include "PRNG.h"
 
-#define MILLION 1000000
+#define MILLION 1000000UL
 #define DUMP_FILE "dumps/state.dat" // where the generated bits will be stored
 
 // ===================================================
 // options:
 #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
 // #define STREAM_LEN (32) // required stream length (by bit)
-#define STREAM_LEN (MILLION*1000) // required stream length (by bit)
+#define STREAM_LEN (MILLION*100UL) // required stream length (by bit)
 #define TIME 1 // whether to calculate the time cost
 // #define PASS_TO_STDOUT
 // ===================================================
@@ -28,7 +28,7 @@
 int main()
 {
     uint32_t out = 0; 
-    uint32_t cnt = 0, out_n = STREAM_LEN/32; // generating 32 bit per round
+    uint64_t cnt = 0, out_n = STREAM_LEN/32; // generating 32 bit per round
     clock_t start_time = 0 , end_time = 0;
     FILE *out_file = NULL;
 
@@ -37,7 +37,7 @@ int main()
     if (!load_state(DUMP_FILE)) printf("Failed to load from %s\n", DUMP_FILE);
     // rand_state();
     strength = NIST;
-    printf("Info: \n 0.STREAM_LEN: %d MILLION\n 1.load_state from: %s\n 2.strength: %d\n", STREAM_LEN/MILLION, DUMP_FILE, strength);
+    printf("Info: \n 0.STREAM_LEN: %lu MILLION\n 1.load_state from: %s\n 2.strength: %d\n", STREAM_LEN/MILLION, DUMP_FILE, strength);
 
     puts("Running...");
 

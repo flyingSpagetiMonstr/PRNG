@@ -12,16 +12,8 @@ int dump_state(char *filename);
 
 // "strength" that can pass certain tests, default is `NIST` 
 enum _strengths {
-    // this strength failed NIST tests
-    NIST_FAIL = 0, 
-    // minimum strength to pass NIST tests
-    NIST = 1, 
-    // this strength failed TestU01 Crush (@matrix_rank, p-value = 9e-4, on win, without -lgmp)
-    CRUSH_FAIL = 5, 
-    // able to pass TestU01 Crush
-    CRUSH = 10, 
-    // testing
-    BIG_CRUSH = 10 
+    NIST = 10, // able to pass NIST tests
+    CRUSH = 12, // not tested yet
 };
 // ==================================
 
