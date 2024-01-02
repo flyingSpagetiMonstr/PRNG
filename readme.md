@@ -40,7 +40,7 @@ was running BigCrush but it was too slow so I terminated it, the incomplete repo
 
 For details on how/why it works, see `explain.md` (in simplified Chinese) on branch `hide-i`, and refer to codes on `hide-i` too.
 
-# min
+## min
 
 # Inactive Branches
 archived, no longer wotking on
