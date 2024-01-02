@@ -29,7 +29,7 @@ int main()
 {
     out_t out = 0; 
     uint64_t cnt = 0, out_n = STREAM_LEN/N; // generating 32 bit per round
-    clock_t start_time = 0 , end_time = 0;
+    clock_t start_time = 0 , time_cost = 0;
     FILE *out_file = NULL;
 
     out_file = fopen(OUTPUT, "wb");
@@ -47,19 +47,20 @@ int main()
 
     puts("Running...");
 
-    if(TIME) start_time = clock();
     // =======================================
     for (cnt = 1; cnt <= out_n; cnt++)
     {
+        if(TIME) start_time = clock();
         out = generator();
+        if(TIME) time_cost += clock() - start_time;
+
         YIELD(out);
     }
     // =======================================
-    if(TIME) end_time = clock();
 
     puts("FIN");
 
-    if(TIME) printf("Time cost: %.0f milli seconds\n", ((double)(1000*(end_time - start_time))) / CLOCKS_PER_SEC);
+    if(TIME) printf("Time cost: %.0f milli seconds\n", ((double)(1000*(time_cost))) / CLOCKS_PER_SEC);
     if(!dump_state(DUMP_FILE)) printf("Failed to dump into %s\n", DUMP_FILE);
     fclose(out_file);
 }
