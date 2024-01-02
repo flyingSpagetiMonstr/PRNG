@@ -14,9 +14,9 @@ For the test report, see `report\1000-test-finalAnalysisReport.txt`
 
 ---
 
-For details on how/why it works, see `explain.md` (in simplified Chinese) on branch `hide-i`, and refer to codes on `hide-i` too.
+There is an explanation on mechanisms of [previous versions](#encapsuled).
 
-As for codes in the default/current branch, mechannisms are almost same as `hide-i`, only same optimizations. Detailed changes and corresponding explanations can be found in log.md.
+Detailed changes and corresponding explanations across different branches/versions can be found in `log.md`.
 
 # Efficiency and Randomness
 
@@ -26,6 +26,31 @@ Space cost: several bits.
 
 Time cost: able to generate one million bits in several milliseconds now, and still passing NIST and dieharder tests.
 
+# Active Branches
+
+## alpha
+latest version, currently developing, using several bits as state
+
+## encapsuled
+latest veriosn of using `uint8_t f[256]` in state
+
+passed NIST, dieharder, TestU01 Crush
+
+was running BigCrush but it was too slow so I terminated it, the incomplete report is also stored in `report/` of this branch
+
+For details on how/why it works, see `explain.md` (in simplified Chinese) on branch `hide-i`, and refer to codes on `hide-i` too.
+
+# min
+
+# Inactive Branches
+archived, no longer wotking on
+- master 
+- mini
+- neg-optm
+- optm
+- hide-i
+- dieharder-adapted
+- bit (initial version)
 
 # Mannual
 -  compiling with gcc
