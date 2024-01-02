@@ -32,7 +32,7 @@ Time cost: able to generate one million bits in several milliseconds now, and st
 latest version, currently developing, using several bits as state
 
 ## encapsuled
-latest veriosn of using `uint8_t f[256]` in state
+latest veriosn of using `uint8_t f[256]` as part of state
 
 passed NIST, dieharder, TestU01 Crush
 
