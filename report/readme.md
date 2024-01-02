@@ -1,6 +1,6 @@
 # About the report
 
-The sample_size of this test is 1000000 (i.e. running .\assess 1000000) 
+for NIST tests, the sample_size of this test is 1000000 (i.e. running .\assess 1000000) 
 
 1000 samples are generated continuously and tested together.
 
