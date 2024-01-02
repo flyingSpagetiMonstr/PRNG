@@ -13,24 +13,28 @@
 
 enum _strengths strength = NIST;
 
-typedef struct _state_t
-{
-    uint32_t x;
-    uint32_t y;
-    uint32_t z;
-} state_t;
+// typedef struct _state_t
+// {
+//     out_t x;
+//     out_t y;
+// } state_t;
 
-#define G(state) (state->x ^ state->y ^ state->z)
+typedef INT(TWO_N) state_t;
+
+#define X(state) ((state)>>N)
+#define Y(state) ((state)&Y_MASK)
+
+#define G(state) (X(state) + Y(state))
 
 static inline void update(void); 
-static inline uint32_t phi(uint32_t a, uint32_t b, uint32_t c);
-static inline uint8_t state_f(uint8_t i);
+static inline out_t phi(out_t a, out_t b);
+static inline out_t state_f(out_t i);
 // =========================================================
 
-static state_t 
-_s = {0xAABBCCDD, 0xBBCCDDEE, 0xCCDDEEFF}, *state = &_s;
+static state_t state = _VALUE;
+// _s = {0xAABBCCDD, 0xBBCCDDEE, 0xCCDDEEFF}, *state = &_s;
 
-uint32_t generator(void)
+out_t generator(void)
 {
     update();
     return G(state);
@@ -39,55 +43,29 @@ uint32_t generator(void)
 
 static inline void update(void)
 {
-    // uint32_t check[3] = {state->x, state->y, state->z};
-
-    uint32_t register 
-    a = state->x ^ state->y ^ state->z,
-    b = state_f(a - 1),
-    c = state_f(a + 1);
+    out_t register a = X(state) ^ Y(state);
+    out_t register b = state_f(a);
     
     for (int cnt = 0; cnt < strength; cnt++)
     {
-        a = phi(a, b, c);
-        b = phi(b, c, a);
-        c = phi(c, a, b);
+        a = phi(a, b);
+        b = phi(b, a);
     }
-    state->x = a; state->y = b; state->z = c;
-
-    // if (state->x == check[0] && state->y == check[1] && state->z == check[2])
-    // {
-    //     puts("!!!!");
-    //     for (int i = 0; i < 3; i++)
-    //     {
-    //         printf("xxx: %08X\n", check[i]);
-    //     }
-    //     exit(0);
-    // }
-
-    // 32
-    // 3 * 32
-
-    // 3 * 3 = 9
-    // min: 36bit (?)
+    state = a;
+    state = (state<<N) ^ b;
+    state = ~state;
 }
 
-static inline uint32_t phi(uint32_t a, uint32_t b, uint32_t c)
+static inline out_t phi(out_t a, out_t b)
 {
-    if (TO_02(b))
-        a ^= c, a = RSHIFT(a, TO_X32(b));
-
-    a += state_f(TO_32(c)) << TO_03(b);
-    a += 1;
+    a += state_f(b);
+    // a = SHIFT_N(a, TO_N(b));
     return a;
 }
 
-//! \param i: [0, 32)
-//! \returns `f[i]`: [0, 8)
-static inline uint8_t state_f(uint8_t i)
+static inline out_t state_f(out_t i)
 {
-    return ((state->x >> i) & (0b1)) << 2
-        ^ ((state->y >> i) & (0b1)) << 1
-        ^ ((state->z >> i) & (0b1)) << 0;
+    return X(SHIFT_2N(state, TO_2N(i)));
 }
 
 // =========================================================
@@ -95,9 +73,7 @@ static inline uint8_t state_f(uint8_t i)
 // init state as "default state" 
 void default_state(void)
 {
-    state->x = 0xAABBCCDD;
-    state->y = 0xBBCCDDEE; 
-    state->z = 0xCCDDEEFF;
+    state = _VALUE;
     return;
 }
 
@@ -105,9 +81,8 @@ void default_state(void)
 void rand_state(void)
 {
     srand(time(0));
-    state->x = (uint32_t)rand();
-    state->y = (uint32_t)rand();
-    state->z = (uint32_t)rand();
+    state = (uint32_t)rand();
+    state = (state<<N) + (uint32_t)rand();
 }
 
 /*!
@@ -120,12 +95,12 @@ int load_state(char *filename)
 {
     int success = 0;
     default_state();
-    success = load(state, filename, sizeof(*state));
+    success = load(&state, filename, sizeof(state));
     return success;
 }
 
 // dumps state into the given file, return 1 on success and 0 when fail
 int dump_state(char *filename)
 {
-    return dump(state, filename, sizeof(*state));
+    return dump(&state, filename, sizeof(state));
 }
