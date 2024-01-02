@@ -68,6 +68,16 @@ Runing BigCrush
 
 branch `mini`:
 
-complex enough relationship & extracting enough infomation 
+using `uint16_t x, y, z` as state
+
+branch `min`:
+
+using `uint64_t x` as state
+
+**1.2** 
+
+BigCrush is too slow, stashed
+
+branch `alpha`
 
 ---
