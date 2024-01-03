@@ -4,7 +4,7 @@ A Pseudorandom Number Generator
 
 Not using any existing cryptographic algorithms or PRNGs
 
-Update: it has become a CSPRNG (Cryptographically secure pseudorandom number generator) now, if I didn't get it wrong. 
+<!-- Update: it has become a CSPRNG (Cryptographically secure pseudorandom number generator) now, if I didn't get it wrong.  -->
 
 ---
 
