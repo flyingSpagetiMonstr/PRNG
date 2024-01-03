@@ -15,6 +15,7 @@ enum _strengths strength = NIST;
 
 typedef INT(TWO_N) state_t;
 
+#define LSHIFT_64(x, n) (((x)<<(n))^((x)>>(64-(n))))
 #define RSHIFT_64(x, n) (((x)>>(n))^((x)<<(64-(n))))
 #define G(state) (((state)>>N) ^ ((state)&Y_MASK))
 
@@ -34,12 +35,20 @@ static inline void update_state(void)
 {
     state_t register s = 0;
     uint8_t register i = 0;
+    uint8_t register bit = 0;
     while (i < TWO_N)
     {
         s += RSHIFT_64(state, i);
-        i += (s&1) + 1;
+        bit ^= state >> i++;
+        if (bit&1)
+        {
+            s ^= LSHIFT_64(state, i);
+            bit ^= state >> i++;
+            bit ^= state >> i++;
+        }
     }
     state = ~s;
+    state ^= i + bit;
 }
 // =========================================================
 

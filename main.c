@@ -10,9 +10,8 @@
 // ===================================================
 // options:
 #define OUTPUT "testscripts/data/stream.dat" // where the generated bits will be stored
-// #define STREAM_LEN (32) // required stream length (by bit)
-#define STREAM_LEN (MILLION*1000UL) // required stream length (by bit)
-#define TIME 0 // whether to calculate the time cost
+#define STREAM_LEN (MILLION*1UL) // required stream length (by bit)
+#define TIME 1 // whether to calculate the time cost
 // #define PASS_TO_STDOUT
 // ===================================================
 

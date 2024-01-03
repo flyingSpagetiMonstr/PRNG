@@ -1,10 +1,12 @@
-# echo -e "============================="
-# echo -e "Running main: "
-# cd ..
-# make rerun
-# cd testscripts
-# echo -e "============================="
-# echo -e "Running assess: "
+echo -e "============================="
+echo -e "Running main: "
+
+pushd ..
+make rerun
+popd
+
+echo -e "============================="
+echo -e "Running assess: "
 ./assess 1000000
 
 serial=alpha-1000

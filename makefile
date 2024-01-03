@@ -2,7 +2,7 @@ CC = gcc -O3
 FLAGS = -I include/
 
 OBJS = objs/dump.o objs/PRNG.o
-LIBNAME = mini
+LIBNAME = alpha
 
 MAIN = $(if $(shell echo $$OS), main.exe, main) # OS-specific 
 RRM = $(if $(shell echo $$OS), del /s, rm -rf) # OS-specific command

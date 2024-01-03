@@ -1,20 +1,17 @@
 *.exe
 *.asm
-*.pdf
 
-Q.md
-sts-2.1.2
 others/
 objs/
 dumps/
 bin/
+
 .vscode
 
-measure.ps1
 
 PRNG
 main
 
-testscripts/*/
-
 testscripts/assess
+testscripts/tu01
+testscripts/*/
