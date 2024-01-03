@@ -14,8 +14,8 @@ int main()
     
     unif01_Gen* gen = unif01_CreateExternGenBits("PRNG::alpha", generator);
 
-    puts("Running Crush for alpha..."); fflush(stdout);
-    bbattery_Crush(gen);
+    puts("Running BigCrush for alpha..."); fflush(stdout);
+    bbattery_BigCrush(gen);
 
     unif01_DeleteExternGenBits(gen);
 

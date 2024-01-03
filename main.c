@@ -40,7 +40,7 @@ int main()
     
     printf("=============================================\n"
         "Info: \n"
-        " 0.STREAM_LEN: %lu MILLION\n"
+        " 0.STREAM_LEN: %lu MILLION bits\n"
         " 1.load_state from: %s\n"
         " 3.state size: %d-bit (type: uint%d_t)\n"
         " 4.TIME: %d, YIELD: %d\n",

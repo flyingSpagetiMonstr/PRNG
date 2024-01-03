@@ -14,17 +14,17 @@ For the test report, see `report\1000-test-finalAnalysisReport.txt`
 
 ---
 
-There is an explanation on mechanisms of [previous versions](#encapsuled).
+There is an explanation on mechanisms of [previous versions](#encapsuled), but the approaches and thoughts are constantly evolving.
 
 Detailed changes and corresponding explanations across different branches/versions can be found in `log.md`.
 
 # Efficiency and Randomness
 
-Still under develop/optimizing.
+Still under develop/improvement.
 
 Space cost: several bits.
 
-Time cost: able to generate one million bits in several milliseconds now, and still passing NIST and dieharder tests.
+Time cost: able to generate one million bits in several milliseconds, still passing NIST and TestU01 Crush and ...
 
 # Active Branches
 
@@ -38,7 +38,11 @@ passed NIST, dieharder, TestU01 Crush
 
 was running BigCrush but it was too slow so I terminated it, the incomplete report is also stored in `report/` of this branch
 
+
+### `explain.md`
 For details on how/why it works, see `explain.md` (in simplified Chinese) on branch `hide-i`, and refer to codes on `hide-i` too.
+### note
+Seeing from now, approaches in `hide-i` is quite dumb, and thoughts in `explain.md` are also very immature. 
 
 ## min
 

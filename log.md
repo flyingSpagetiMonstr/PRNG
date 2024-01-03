@@ -78,6 +78,18 @@ using `uint64_t x` as state
 
 BigCrush is too slow, stashed
 
-branch `alpha`
+branch `alpha`: 
+
+using `uint64_t` as state
+
+speed: several seconds / million bits
+
+**1.3** 
+
+`alpha`:
+
+passed NIST 1,000,000 * 1000
+
+passed TestU01 Crush, running BigCrush
 
 ---

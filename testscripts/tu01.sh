@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e  # Exit on any error
 
-output="stored/TestU01-Crush-alpha.txt"
+output="stored/TestU01-BigCrush-alpha.txt"
 
 pushd ..
 make clean
