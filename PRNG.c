@@ -13,61 +13,34 @@
 
 enum _strengths strength = NIST;
 
-// typedef struct _state_t
-// {
-//     out_t x;
-//     out_t y;
-// } state_t;
-
 typedef INT(TWO_N) state_t;
 
-#define X(state) ((state)>>N)
-#define Y(state) ((state)&Y_MASK)
+#define RSHIFT_64(x, n) (((x)>>(n))^((x)<<(64-(n))))
+#define G(state) (((state)>>N) ^ ((state)&Y_MASK))
 
-#define G(state) (X(state) + Y(state))
-
-static inline void update(void); 
-static inline out_t phi(out_t a, out_t b);
-static inline out_t state_f(out_t i);
+static inline void update_state(void); 
 // =========================================================
 
 static state_t state = _VALUE;
-// _s = {0xAABBCCDD, 0xBBCCDDEE, 0xCCDDEEFF}, *state = &_s;
 
 out_t generator(void)
 {
-    update();
+    update_state();
     return G(state);
 }
 // =========================================================
 
-static inline void update(void)
+static inline void update_state(void)
 {
-    out_t register a = X(state) ^ Y(state);
-    out_t register b = state_f(a);
-    
-    for (int cnt = 0; cnt < strength; cnt++)
+    state_t register s = 0;
+    uint8_t register i = 0;
+    while (i < TWO_N)
     {
-        a = phi(a, b);
-        b = phi(b, a);
+        s += RSHIFT_64(state, i);
+        i += (s&1) + 1;
     }
-    state = a;
-    state = (state<<N) ^ b;
-    state = ~state;
+    state = ~s;
 }
-
-static inline out_t phi(out_t a, out_t b)
-{
-    a += state_f(b);
-    // a = SHIFT_N(a, TO_N(b));
-    return a;
-}
-
-static inline out_t state_f(out_t i)
-{
-    return X(SHIFT_2N(state, TO_2N(i)));
-}
-
 // =========================================================
 
 // init state as "default state" 
@@ -82,7 +55,7 @@ void rand_state(void)
 {
     srand(time(0));
     state = (uint32_t)rand();
-    state = (state<<N) + (uint32_t)rand();
+    state = (state<<N) ^ (uint32_t)rand();
 }
 
 /*!

@@ -13,5 +13,8 @@ bin/
 measure.ps1
 
 PRNG
+main
 
 testscripts/*/
+
+testscripts/assess

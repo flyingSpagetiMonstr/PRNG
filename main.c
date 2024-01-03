@@ -9,10 +9,10 @@
 
 // ===================================================
 // options:
-#define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
+#define OUTPUT "testscripts/data/stream.dat" // where the generated bits will be stored
 // #define STREAM_LEN (32) // required stream length (by bit)
 #define STREAM_LEN (MILLION*1000UL) // required stream length (by bit)
-#define TIME 1 // whether to calculate the time cost
+#define TIME 0 // whether to calculate the time cost
 // #define PASS_TO_STDOUT
 // ===================================================
 
@@ -33,29 +33,30 @@ int main()
     FILE *out_file = NULL;
 
     out_file = fopen(OUTPUT, "wb");
+    if (out_file == NULL) printf("Failed to open output file: %s\n", OUTPUT);
 
     if (!load_state(DUMP_FILE)) printf("Failed to load from %s\n", DUMP_FILE);
     // rand_state();
     strength = NIST;
     
-    printf("Info: \n"
+    printf("=============================================\n"
+        "Info: \n"
         " 0.STREAM_LEN: %lu MILLION\n"
         " 1.load_state from: %s\n"
-        " 2.strength: %d\n"
-        " 3.state size: %d-bit (type: uint%d_t)\n",
-        STREAM_LEN/MILLION, DUMP_FILE, strength, 2*N, 2*N);
+        " 3.state size: %d-bit (type: uint%d_t)\n"
+        " 4.TIME: %d, YIELD: %d\n",
+        STREAM_LEN/MILLION, DUMP_FILE, 2*N, 2*N, TIME, !TIME);
 
     puts("Running...");
 
     // =======================================
+    if(TIME) start_time = clock();
     for (cnt = 1; cnt <= out_n; cnt++)
     {
-        if(TIME) start_time = clock();
         out = generator();
-        if(TIME) time_cost += clock() - start_time;
-
-        YIELD(out);
+        if (!TIME) YIELD(out);
     }
+    if(TIME) time_cost = clock() - start_time;
     // =======================================
 
     puts("FIN");
