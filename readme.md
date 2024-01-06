@@ -27,7 +27,7 @@ Still under develop/improvement.
 
 Space cost: several bits.
 
-Time cost: able to generate one million bits in several milliseconds, still passing NIST and TestU01 Crush and ...
+Time cost: able to generate one million bits in several milliseconds.
 
 # Active Branches
 

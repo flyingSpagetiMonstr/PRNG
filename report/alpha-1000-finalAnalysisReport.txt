@@ -1,31 +1,3 @@
-#define X(state) ((state)>>N)
-#define Y(state) ((state)&Y_MASK)
-#define G(state) (X(state) ^ Y(state))
-
-static inline void update(void); 
-// =========================================================
-
-static state_t state = _VALUE;
-
-out_t generator(void)
-{
-    update();
-    return G(state);
-}
-// =========================================================
-
-static inline void update(void)
-{
-    state_t register s = 0;
-    uint8_t register i = 0;
-    while (i < TWO_N)
-    {
-        s += RSHIFT_64(state, i);
-        i += (s&1) + 1;
-    }
-    state = ~s;
-}
-
 ------------------------------------------------------------------------------
 RESULTS FOR THE UNIFORMITY OF P-VALUES AND THE PROPORTION OF PASSING SEQUENCES
 ------------------------------------------------------------------------------
@@ -234,3 +206,31 @@ is approximately = 604 for a sample size = 618 binary sequences.
 For further guidelines construct a probability table using the MAPLE program
 provided in the addendum section of the documentation.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#define X(state) ((state)>>N)
+#define Y(state) ((state)&Y_MASK)
+#define G(state) (X(state) ^ Y(state))
+
+static inline void update(void); 
+// =========================================================
+
+static state_t state = _VALUE;
+
+out_t generator(void)
+{
+    update();
+    return G(state);
+}
+// =========================================================
+
+static inline void update(void)
+{
+    state_t register s = 0;
+    uint8_t register i = 0;
+    while (i < TWO_N)
+    {
+        s += RSHIFT_64(state, i);
+        i += (s&1) + 1;
+    }
+    state = ~s;
+}
