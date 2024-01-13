@@ -21,6 +21,14 @@ There is an explanation on mechanisms of [previous versions](#encapsuled), but t
 
 Detailed changes and corresponding explanations across different branches/versions can be found in `log.md`.
 
+# Mannual
+-  compiling with gcc
+-  modify this line 
+   ```c
+   #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
+   ```
+-  run 'make' to compile and run it
+
 # Efficiency and Randomness
 
 Still under develop/improvement.
@@ -58,11 +66,3 @@ archived, no longer wotking on
 - hide-i
 - dieharder-adapted
 - bit (initial version)
-
-# Mannual
--  compiling with gcc
--  modify this line 
-   ```c
-   #define OUTPUT "sts-2.1.2/data/stream.dat" // where the generated bits will be stored
-   ```
--  run 'make' to compile and run it

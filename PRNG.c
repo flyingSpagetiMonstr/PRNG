@@ -11,7 +11,7 @@
 // for storing state when program ends, and reload from it later when the generator is restarted.
 #include "dump.h" 
 
-enum _strengths strength = NIST;
+// enum _strengths strength = NIST;
 
 typedef INT(TWO_N) state_t;
 

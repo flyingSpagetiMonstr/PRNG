@@ -10,7 +10,7 @@ popd
 
 .\assess 1000000
 
-set serial=alpha-100-test-04
+set serial=alpha-1000-test
 @REM Time cost: 12876 milli seconds
 
 @REM xcopy .\experiments\AlgorithmTesting .\stored\%serial%-report /E /I /Q /Y
