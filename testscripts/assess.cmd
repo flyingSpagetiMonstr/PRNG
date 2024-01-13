@@ -1,6 +1,16 @@
+@echo "============================="
+@echo "Running main: "
+
+pushd ..
+make rerun
+popd
+
+@echo "============================="
+@echo "Running assess: "
+
 .\assess 1000000
 
-set serial=alpha-1000-test-01
+set serial=alpha-100-test-04
 @REM Time cost: 12876 milli seconds
 
 @REM xcopy .\experiments\AlgorithmTesting .\stored\%serial%-report /E /I /Q /Y
