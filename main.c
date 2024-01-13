@@ -36,7 +36,6 @@ int main()
 
     if (!load_state(DUMP_FILE)) printf("Failed to load from %s\n", DUMP_FILE);
     // rand_state();
-    strength = NIST;
     
     printf("=============================================\n"
         "Info: \n"

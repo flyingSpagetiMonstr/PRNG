@@ -19,15 +19,11 @@ void rand_state(void);
 int load_state(char *filename);
 int dump_state(char *filename);
 
-// "strength" that can pass certain tests, default is `NIST` 
-enum _strengths {
-    NIST = 52, // able to pass NIST tests
-    MAX = (uint16_t)2*130
-};
+
 // ==================================
 
 #ifndef PRNG_C
-extern enum _strengths strength;
+// extern enum _strengths strength;
 // extern uint16_t strength;
 #endif
 
