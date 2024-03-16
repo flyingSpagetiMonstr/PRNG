@@ -14,10 +14,11 @@ Randomness is tested under:
 For test reports, see `report/`
 
 ---
+For how the latest version works, see `others/实验报告.pdf` (in Chinese).
 
-There is an explanation on mechanisms of [previous versions](#encapsuled), but the approaches and thoughts are constantly evolving.
+There is also an explanation on mechanisms of [previous versions](#encapsuled).
 
-Detailed changes and corresponding explanations across different branches/versions can be found in `log.md`.
+Detailed changes and corresponding explanations across different branches/versions can be found in `others/log.md`.
 
 # Mannual
 -  compiling with gcc
@@ -33,7 +34,7 @@ Still under develop/improvement.
 
 Space cost: several bits.
 
-Time cost: able to generate one million bits in several milliseconds.
+Time cost: able to generate one million bits in several milliseconds (about 0.1 GB/s).
 
 # Active Branches
 

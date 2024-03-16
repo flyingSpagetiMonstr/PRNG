@@ -1,7 +1,8 @@
 *.exe
 *.asm
 
-others/
+# others/
+free/
 objs/
 dumps/
 bin/
